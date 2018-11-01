@@ -21,6 +21,8 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.JBMenuItem;
+import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.util.Condition;
@@ -43,7 +45,6 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TreeSpeedSearch;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.Processor;
@@ -66,6 +67,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -75,6 +77,7 @@ import java.util.Set;
 
 /**
  * 这个dialog是抄的idea的
+ *
  * @author yee
  * @date 2018/11/1
  */
@@ -95,13 +98,12 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     private TabbedPaneWrapper myTabbedPane;
     private ChooseByNamePanel myGotoByNamePanel;
     private PsiClass myInitialClass;
-    private JTextArea textPane;
 
     private ListModel listModel;
-    private JList<ListPsiMethod> methodJList;
     private static final Comparator<ListPsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
 
-    private String code;
+    private CodePanel codePanel;
+
 
     public GeneratorDlg(String title, Project project) {
         this(title, project, PsiClass.class, null);
@@ -243,30 +245,53 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         this.myTabbedPane.addChangeListener(e -> GeneratorDlg.this.handleSelectionChanged());
         Component component = this.myTabbedPane.getComponent();
         panel.add(component);
-        listModel = new ListModel(c);
-        methodJList = new JBList<>(listModel);
-        methodJList.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        methodJList.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
-            List<ListPsiMethod> methods = methodJList.getSelectedValuesList();
-            SelectedInfo info = new SelectedInfo();
-            info.setPsiClass(calcSelectedClass());
-            info.setMethods(methods);
-            code = info.toString();
-            textPane.setText(code);
 
-        }));
-        JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(methodJList);
-        scrollPane.setPreferredSize(JBUI.size(500, 100));
-        panel.add(new JLabel("Methods:"));
-        panel.add(listScrollPane);
-        textPane = new JTextArea();
-        textPane.setEditable(false);
-        textPane.setText("Generate Code");
-        JScrollPane textScrollPane = ScrollPaneFactory.createScrollPane(textPane);
-        textScrollPane.setPreferredSize(JBUI.size(500, 100));
-        panel.add(new JLabel("Result:"));
-        panel.add(textScrollPane);
+        panel.add(createMethodListPanel());
         return panel;
+    }
+
+
+    private JPanel createMethodListPanel() {
+        listModel = new ListModel(c);
+        codePanel = new CodePanel("Method:", listModel) {
+            @Override
+            protected PsiClass getPsiClass() {
+                return calcSelectedClass();
+            }
+        };
+        codePanel.addMouseClickListener(e -> {
+            if (e.getButton() == MouseEvent.BUTTON3) {
+                JList list = (JList) e.getSource();
+                int index = list.locationToIndex(e.getPoint());
+                if (index >= 0) {
+                    list.setSelectedIndex(index);
+                    initMethodContextMenu((ListPsiMethod) list.getModel().getElementAt(index), e);
+                }
+            }
+        });
+        return codePanel;
+    }
+
+    private void initMethodContextMenu(ListPsiMethod method, MouseEvent event) {
+        PsiClass[] array = PsiShortNamesCache.getInstance(getProject()).getClassesByName(method.getPsiMethod().getReturnTypeElement().getText(), GlobalSearchScope.allScope(getProject()));
+        boolean returnTypeEnable = false;
+        if (!(null == array || array.length == 0)) {
+            returnTypeEnable = array[0].isInterface();
+        }
+        JBPopupMenu menu = new JBPopupMenu("Mock menu");
+        JBMenuItem parameter = new JBMenuItem("Mock Parameter");
+        JBMenuItem returnType = new JBMenuItem("Mock Return type");
+        returnType.setEnabled(returnTypeEnable);
+        menu.add(parameter);
+        menu.add(new JBPopupMenu.Separator());
+        menu.add(returnType);
+        returnType.addActionListener(e -> {
+            CodeDialog dialog = new CodeDialog(myProject, array[0]);
+            dialog.show();
+            SelectedInfo info = dialog.getInfo();
+            // TODO info怎么处理
+        });
+        menu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private Set<Object> doFilter(Set<Object> elements) {
@@ -300,7 +325,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         PsiClass selection = this.calcSelectedClass();
         if (selection != null) {
             listModel.setMethods(selection.getMethods());
-            listModel.fireContentsChanged(methodJList);
+            listModel.fireContentsChanged(codePanel.getList());
         }
 //        this.setOKActionEnabled(selection != null);
 
@@ -314,7 +339,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
                 Messages.showErrorDialog(this.myTabbedPane.getComponent(), SymbolPresentationUtil.getSymbolPresentableText(this.mySelectedClass) + " is not acceptable");
             } else {
                 Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
-                Transferable tText = new StringSelection(textPane.getText());
+                Transferable tText = new StringSelection(codePanel.getTextPane().getText());
                 clip.setContents(tText, null);
                 GeneratorDlg.super.doOKAction();
             }
@@ -691,9 +716,5 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         protected String[] getNames() {
             return PsiShortNamesCache.getInstance(this.myProject).getAllClassNames();
         }
-    }
-
-    public String getCode() {
-        return code;
     }
 }
