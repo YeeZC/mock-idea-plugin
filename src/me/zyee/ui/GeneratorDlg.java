@@ -144,7 +144,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private Filter<PsiClass> allFilter() {
-        return element -> true;
+        return element -> element.isInterface();
     }
 
     @Override
