@@ -47,7 +47,7 @@ public class SelectedInfo {
                     buffer.append(")");
                     PsiType type = method.getReturnType();
                     if (null != type && !type.equalsToText("void")) {
-                        buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiClass:", "")));
+                        buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiType:", "")));
                     }
                     buffer.append(";\n");
                 }
