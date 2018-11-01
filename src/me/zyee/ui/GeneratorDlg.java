@@ -71,6 +71,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -317,6 +320,9 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
             if (!this.myClassFilter.isAccepted(this.mySelectedClass)) {
                 Messages.showErrorDialog(this.myTabbedPane.getComponent(), SymbolPresentationUtil.getSymbolPresentableText(this.mySelectedClass) + " is not acceptable");
             } else {
+                Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+                Transferable tText = new StringSelection(textPane.getText());
+                clip.setContents(tText, null);
                 GeneratorDlg.super.doOKAction();
             }
         }

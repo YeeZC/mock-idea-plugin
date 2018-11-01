@@ -16,5 +16,6 @@ public class EasyMockGeneratorGroup extends AnAction {
         Project project = getEventProject(e);
         GeneratorDlg dialog = new GeneratorDlg("", project);
         dialog.showDialog();
+        // TODO 直接把代码输到文件
     }
 }
