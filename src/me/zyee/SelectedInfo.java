@@ -41,13 +41,13 @@ public class SelectedInfo {
                     PsiMethod method = listPsiMethod.getPsiMethod();
                     buffer.append(String.format("EasyMock.expect(%s.%s( ", beanName, method.getName()));
                     for (JvmParameter parameter : method.getParameters()) {
-                        buffer.append(parameter.getType()).append(",");
+                        buffer.append(parameter.getName()).append(",");
                     }
                     buffer.setCharAt(buffer.length() - 1, ')');
                     buffer.append(")");
                     PsiType type = method.getReturnType();
                     if (null != type && !type.equalsToText("void")) {
-                        buffer.append(String.format(".addReturn(%s)", type));
+                        buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiClass:", "")));
                     }
                     buffer.append(";\n");
                 }

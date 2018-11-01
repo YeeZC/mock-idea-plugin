@@ -1,8 +1,8 @@
 <idea-plugin>
-  <id>com.your.company.unique.plugin.id</id>
-  <name>Plugin display name here</name>
+  <id>me.zyee.easymockgemerator</id>
+  <name>EasyMockGenerator</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">yee.zyee.site</vendor>
 
   <description><![CDATA[
       Enter short description for your plugin here.<br>
