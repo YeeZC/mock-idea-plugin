@@ -2,8 +2,8 @@ package me.zyee;
 
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiType;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class SelectedInfo {
     private PsiClass psiClass;
-    private List<? extends ListPsiMethod> methods;
+    private List<PsiMethod> methods;
 
     public SelectedInfo() {
     }
@@ -22,7 +22,7 @@ public class SelectedInfo {
         this.psiClass = psiClass;
     }
 
-    public void setMethods(List<? extends ListPsiMethod> methods) {
+    public void setMethods(List<PsiMethod> methods) {
         this.methods = methods;
     }
 
@@ -33,17 +33,16 @@ public class SelectedInfo {
         String text = String.format("%s %s = EasyMock.createMock(%s.class);\n", className, beanName, className);
         StringBuffer buffer = new StringBuffer(text);
         if (null != methods) {
-            for (ListPsiMethod listPsiMethod : methods) {
-                PsiMethod method = listPsiMethod.getPsiMethod();
+            for (PsiMethod method : methods) {
                 buffer.append(String.format("EasyMock.expect(%s.%s( ", beanName, method.getName()));
                 for (JvmParameter parameter : method.getParameters()) {
                     buffer.append(parameter.getName()).append(",");
                 }
                 buffer.setCharAt(buffer.length() - 1, ')');
                 buffer.append(")");
-                PsiType type = method.getReturnType();
-                if (null != type && !type.equalsToText("void")) {
-                    buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiType:", "")));
+                PsiElement type = method.getReturnTypeElement();
+                if (null != type && !"void".equals(type.getText())) {
+                    buffer.append(String.format(".addReturn(%s)", type.getText()));
                 }
                 buffer.append(";\n");
             }

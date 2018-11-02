@@ -18,8 +18,6 @@ import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.JBMenuItem;
-import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.util.Disposer;
@@ -30,10 +28,12 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
 import com.intellij.psi.util.PsiUtilCore;
+import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TreeSpeedSearch;
@@ -42,24 +42,23 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
-import me.zyee.ListPsiMethod;
-import me.zyee.SelectedInfo;
-import me.zyee.ui.model.ListModel;
 import me.zyee.ui.model.MyGotoClassModel;
 import me.zyee.ui.model.SubclassGotoClassModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -88,9 +87,6 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     private TabbedPaneWrapper myTabbedPane;
     private ChooseByNamePanel myGotoByNamePanel;
     private PsiClass myInitialClass;
-
-    private ListModel listModel;
-    private static final Comparator<ListPsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
 
     private CodePanel codePanel;
 
@@ -202,46 +198,28 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private JPanel createMethodListPanel() {
-        listModel = new ListModel(c);
-        codePanel = new CodePanel("Method:", listModel) {
+        codePanel = new CodePanel("Method:") {
             @Override
             protected PsiClass getPsiClass() {
                 return calcSelectedClass();
             }
         };
-        codePanel.addMouseClickListener(e -> {
-            if (e.getButton() == MouseEvent.BUTTON3) {
-                JList list = (JList) e.getSource();
-                int index = list.locationToIndex(e.getPoint());
+        PsiElementList<PsiMethod> list = codePanel.getList();
+        (new DoubleClickListener() {
+            @Override
+            protected boolean onDoubleClick(MouseEvent event) {
+                int index = list.locationToIndex(event.getPoint());
                 if (index >= 0) {
-                    list.setSelectedIndex(index);
-                    initMethodContextMenu((ListPsiMethod) list.getModel().getElementAt(index), e);
+                    PsiMethod psiMethod = list.getModel().getElementAt(index);
+                    ParameterDlg dlg = new ParameterDlg(getProject(), psiMethod);
+                    dlg.show();
+                    codePanel.getTextPane().append(dlg.getCode());
+                    return true;
                 }
+                return false;
             }
-        });
+        }).installOn(list);
         return codePanel;
-    }
-
-    private void initMethodContextMenu(ListPsiMethod method, MouseEvent event) {
-        PsiClass[] array = PsiShortNamesCache.getInstance(getProject()).getClassesByName(method.getPsiMethod().getReturnTypeElement().getText(), GlobalSearchScope.allScope(getProject()));
-        boolean returnTypeEnable = false;
-        if (!(null == array || array.length == 0)) {
-            returnTypeEnable = array[0].isInterface();
-        }
-        JBPopupMenu menu = new JBPopupMenu("Mock menu");
-        JBMenuItem parameter = new JBMenuItem("Mock Parameter");
-        JBMenuItem returnType = new JBMenuItem("Mock Return type");
-        returnType.setEnabled(returnTypeEnable);
-        menu.add(parameter);
-        menu.add(new JBPopupMenu.Separator());
-        menu.add(returnType);
-        returnType.addActionListener(e -> {
-            CodeDialog dialog = new CodeDialog(myProject, array[0]);
-            dialog.show();
-            SelectedInfo info = dialog.getInfo();
-            // TODO info怎么处理
-        });
-        menu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private Set<Object> doFilter(Set<Object> elements) {
@@ -466,6 +444,10 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
 
     public boolean isShowLibraryContents() {
         return myIsShowLibraryContents;
+    }
+
+    public String getCode() {
+        return codePanel.getTextPane().getText().trim();
     }
 
     private class MyCallback extends ChooseByNamePopupComponent.Callback {

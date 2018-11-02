@@ -4,14 +4,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiMethod;
 import com.intellij.util.ui.JBUI;
-import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
-import me.zyee.ui.model.ListModel;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.util.Comparator;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 import java.util.List;
 
 /**
@@ -19,18 +18,13 @@ import java.util.List;
  * @date 2018/11/1
  */
 public class CodeDialog extends DialogWrapper {
-    private static final Comparator<ListPsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
-    private ListModel model;
     private PsiClass psiClass;
     private SelectedInfo info;
     private CodePanel codePanel;
 
     protected CodeDialog(@Nullable Project project, PsiClass psiClass) {
         super(project, false);
-        model = new ListModel(c);
         this.psiClass = psiClass;
-        info = new SelectedInfo();
-        info.setPsiClass(psiClass);
         setSize(510, 310);
         this.init();
     }
@@ -40,7 +34,7 @@ public class CodeDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        codePanel = new CodePanel("CodeDialog", model) {
+        codePanel = new CodePanel(psiClass.getQualifiedName()) {
             @Override
             protected PsiClass getPsiClass() {
                 return psiClass;
@@ -54,7 +48,10 @@ public class CodeDialog extends DialogWrapper {
 
     @Override
     protected void doOKAction() {
-        List<ListPsiMethod> methods = ((CodePanel) getContentPanel()).list.getSelectedValuesList();
+        PsiElementList<PsiMethod> list = codePanel.getList();
+        List<PsiMethod> methods = list.getSelectedValuesList();
+        info = new SelectedInfo();
+        info.setPsiClass(psiClass);
         info.setMethods(methods);
         super.doOKAction();
     }
