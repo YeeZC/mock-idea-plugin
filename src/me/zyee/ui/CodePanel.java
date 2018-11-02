@@ -1,12 +1,12 @@
 package me.zyee.ui;
 
+import com.intellij.ide.util.DefaultPsiElementCellRenderer;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.components.JBList;
 import com.intellij.util.ui.JBUI;
-import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
 
 import javax.swing.*;
@@ -20,21 +20,23 @@ import java.util.List;
  * @date 2018/11/1
  */
 public abstract class CodePanel extends JPanel {
-    protected JBList<ListPsiMethod> list;
+    protected JBList<PsiMethod> list;
     private JTextArea textPane;
 
-    public CodePanel(String label, ListModel<ListPsiMethod> listModel) {
+    public CodePanel(String label, ListModel<PsiMethod> listModel) {
         setLayout(new VerticalFlowLayout());
         list = new JBList<>(listModel);
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         list.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
-            List<ListPsiMethod> methods = list.getSelectedValuesList();
+            List<PsiMethod> methods = list.getSelectedValuesList();
             SelectedInfo info = new SelectedInfo();
             info.setPsiClass(getPsiClass());
             info.setMethods(methods);
             textPane.setText(info.toString());
 
         }));
+
+        list.setCellRenderer(new DefaultPsiElementCellRenderer());
 
         JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(list);
         listScrollPane.setPreferredSize(JBUI.size(500, 100));
@@ -66,11 +68,11 @@ public abstract class CodePanel extends JPanel {
     }
 
 
-    public JBList<ListPsiMethod> getList() {
+    public JBList<PsiMethod> getList() {
         return list;
     }
 
-    public void setList(JBList<ListPsiMethod> list) {
+    public void setList(JBList<PsiMethod> list) {
         this.list = list;
     }
 
@@ -81,7 +83,7 @@ public abstract class CodePanel extends JPanel {
     public void loadClass(PsiClass psiClass) {
         PsiMethod[] methods = psiClass.getMethods();
         if (list.getModel() instanceof me.zyee.ui.model.ListModel) {
-            ((me.zyee.ui.model.ListModel) list.getModel()).setMethods(methods);
+            ((me.zyee.ui.model.ListModel) list.getModel()).addAll(methods);
             ((me.zyee.ui.model.ListModel) list.getModel()).fireContentsChanged(list);
         }
         SelectedInfo info = new SelectedInfo();

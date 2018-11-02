@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class SelectedInfo {
     private PsiClass psiClass;
-    private List<? extends ListPsiMethod> methods;
+    private List<PsiMethod> methods;
 
     public SelectedInfo() {
     }
@@ -22,7 +22,7 @@ public class SelectedInfo {
         this.psiClass = psiClass;
     }
 
-    public void setMethods(List<? extends ListPsiMethod> methods) {
+    public void setMethods(List<PsiMethod> methods) {
         this.methods = methods;
     }
 
@@ -33,8 +33,7 @@ public class SelectedInfo {
         String text = String.format("%s %s = EasyMock.createMock(%s.class);\n", className, beanName, className);
         StringBuffer buffer = new StringBuffer(text);
         if (null != methods) {
-            for (ListPsiMethod listPsiMethod : methods) {
-                PsiMethod method = listPsiMethod.getPsiMethod();
+            for (PsiMethod method : methods) {
                 buffer.append(String.format("EasyMock.expect(%s.%s( ", beanName, method.getName()));
                 for (JvmParameter parameter : method.getParameters()) {
                     buffer.append(parameter.getName()).append(",");

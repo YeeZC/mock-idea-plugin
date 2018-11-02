@@ -4,8 +4,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiMethod;
 import com.intellij.util.ui.JBUI;
-import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
 import me.zyee.ui.model.ListModel;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,7 @@ import java.util.List;
  * @date 2018/11/1
  */
 public class CodeDialog extends DialogWrapper {
-    private static final Comparator<ListPsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
+    private static final Comparator<PsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
     private ListModel model;
     private PsiClass psiClass;
     private SelectedInfo info;
@@ -40,7 +40,7 @@ public class CodeDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        codePanel = new CodePanel("CodeDialog", model) {
+        codePanel = new CodePanel(psiClass.getQualifiedName(), model) {
             @Override
             protected PsiClass getPsiClass() {
                 return psiClass;
@@ -54,7 +54,7 @@ public class CodeDialog extends DialogWrapper {
 
     @Override
     protected void doOKAction() {
-        List<ListPsiMethod> methods = ((CodePanel) getContentPanel()).list.getSelectedValuesList();
+        List<PsiMethod> methods = ((CodePanel) getContentPanel()).list.getSelectedValuesList();
         info.setMethods(methods);
         super.doOKAction();
     }

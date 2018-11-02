@@ -30,6 +30,7 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
@@ -42,7 +43,6 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
-import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
 import me.zyee.ui.model.ListModel;
 import me.zyee.ui.model.MyGotoClassModel;
@@ -90,7 +90,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     private PsiClass myInitialClass;
 
     private ListModel listModel;
-    private static final Comparator<ListPsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
+    private static final Comparator<PsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
 
     private CodePanel codePanel;
 
@@ -215,15 +215,15 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
                 int index = list.locationToIndex(e.getPoint());
                 if (index >= 0) {
                     list.setSelectedIndex(index);
-                    initMethodContextMenu((ListPsiMethod) list.getModel().getElementAt(index), e);
+                    initMethodContextMenu((PsiMethod) list.getModel().getElementAt(index), e);
                 }
             }
         });
         return codePanel;
     }
 
-    private void initMethodContextMenu(ListPsiMethod method, MouseEvent event) {
-        PsiClass[] array = PsiShortNamesCache.getInstance(getProject()).getClassesByName(method.getPsiMethod().getReturnTypeElement().getText(), GlobalSearchScope.allScope(getProject()));
+    private void initMethodContextMenu(PsiMethod method, MouseEvent event) {
+        PsiClass[] array = PsiShortNamesCache.getInstance(getProject()).getClassesByName(method.getReturnTypeElement().getText(), GlobalSearchScope.allScope(getProject()));
         boolean returnTypeEnable = false;
         if (!(null == array || array.length == 0)) {
             returnTypeEnable = array[0].isInterface();

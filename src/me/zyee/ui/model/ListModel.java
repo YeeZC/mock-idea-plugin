@@ -2,7 +2,6 @@ package me.zyee.ui.model;
 
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.SortedListModel;
-import me.zyee.ListPsiMethod;
 
 import javax.swing.*;
 import java.util.Comparator;
@@ -11,18 +10,17 @@ import java.util.Comparator;
  * @author yee
  * @date 2018/11/1
  */
-public class ListModel extends SortedListModel<ListPsiMethod> {
+public class ListModel extends SortedListModel<PsiMethod> {
 
 
-    public ListModel(Comparator<ListPsiMethod> comparator) {
+    public ListModel(Comparator<PsiMethod> comparator) {
         super(comparator);
     }
 
-    public void setMethods(PsiMethod[] methods) {
+    @Override
+    public int[] addAll(PsiMethod[] items) {
         this.clear();
-        for (PsiMethod method : methods) {
-            add(new ListPsiMethod(method));
-        }
+        return super.addAll(items);
     }
 
     public void fireContentsChanged(JList list) {
