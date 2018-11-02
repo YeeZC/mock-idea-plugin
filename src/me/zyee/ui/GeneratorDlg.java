@@ -442,6 +442,10 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return myIsShowLibraryContents;
     }
 
+    public String getCode() {
+        return codePanel.getTextPane().getText().trim();
+    }
+
     private class MyCallback extends ChooseByNamePopupComponent.Callback {
         private MyCallback() {
         }
