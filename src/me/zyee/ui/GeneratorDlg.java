@@ -381,6 +381,10 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         super.dispose();
     }
 
+    public String getValue(){
+        return codePanel.getTextPane().getText();
+    }
+
     @Override
     protected String getDimensionServiceKey() {
         return "#com.intellij.ide.util.TreeClassChooserDialog";
