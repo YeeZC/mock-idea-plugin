@@ -7,6 +7,7 @@ import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
@@ -120,7 +121,11 @@ public class ParameterPanel extends JPanel {
         List<PsiClass> classes = new ArrayList<>();
         for (PsiParameter parameter : parameters) {
             String className = parameter.getType().getCanonicalText();
-            PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.projectScope(project));
+            int index = className.indexOf("<");
+            if (index > 0) {
+                className = className.substring(0, index);
+            }
+            PsiClass psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
             if (null != psiClass) {
                 classes.add(psiClass);
             }
