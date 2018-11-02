@@ -1,9 +1,9 @@
 package me.zyee;
 
-import com.intellij.lang.jvm.JvmParameter;
-import com.intellij.lang.jvm.types.JvmReferenceType;
+import com.intellij.psi.PsiClassType;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiType;
+import com.intellij.psi.PsiParameter;
 
 /**
  * @author yee
@@ -11,52 +11,41 @@ import com.intellij.psi.PsiType;
  */
 public class ListPsiMethod {
     private PsiMethod psiMethod;
-    private String method;
+    private String display;
 
     public ListPsiMethod(PsiMethod psiMethod) {
         this.psiMethod = psiMethod;
+        initMethodDisplayName();
+    }
+
+    private void initMethodDisplayName() {
         StringBuffer buffer = new StringBuffer();
         String methodName = psiMethod.getName();
-        PsiType returnType = psiMethod.getReturnType();
-        buffer.append(psiMethod.getModifierList()).append(" ");
+        PsiElement returnType = psiMethod.getReturnTypeElement();
         if (null != returnType) {
-            buffer.append(returnType);
+            buffer.append(returnType.getText());
         }
         buffer.append(" ").append(methodName).append("( ");
-        for (JvmParameter parameter : psiMethod.getParameters()) {
+        for (PsiParameter parameter : psiMethod.getParameterList().getParameters()) {
 
-            buffer.append(parameter.getType()).append(" ").append(parameter.getName()).append(",");
+            buffer.append(parameter.getTypeElement().getText()).append(" ").append(parameter.getName()).append(",");
         }
         buffer.setCharAt(buffer.length() - 1, ')');
         buffer.append(" ");
-        for (JvmReferenceType throwsType : psiMethod.getThrowsTypes()) {
-            buffer.append(throwsType).append(",");
+        for (PsiClassType throwsType : psiMethod.getThrowsList().getReferencedTypes()) {
+            buffer.append(throwsType.getName()).append(",");
         }
         buffer.setLength(buffer.length() - 1);
-        method = buffer.toString();
-        method = method.replace("PsiType:", "").trim();
-        method = method.replace("PsiModifierList:", "").trim();
+        display = buffer.toString();
     }
 
     public PsiMethod getPsiMethod() {
         return psiMethod;
     }
 
-    public void setPsiMethod(PsiMethod psiMethod) {
-        this.psiMethod = psiMethod;
-    }
-
-    public String getMethod() {
-        return method;
-    }
-
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
     @Override
     public String toString() {
-        return method;
+        return display;
     }
 
     public String getName() {
