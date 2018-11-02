@@ -1,6 +1,5 @@
 package me.zyee.action;
 
-import com.intellij.application.options.editor.JavaAutoImportOptions;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -13,19 +12,27 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiImportStatement;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.codeStyle.CodeStyleManager;
-import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.search.GlobalSearchScope;
+import me.zyee.MethodSelectInfoNode;
+import me.zyee.SelectInfoNode;
 import me.zyee.ui.GeneratorDlg;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author yee
  * @date 2018/10/31
  */
 public class EasyMockGeneratorGroup extends AnAction {
+    private SelectInfoNode node;
 
     @Override
     public void actionPerformed(AnActionEvent e) {
@@ -35,8 +42,9 @@ public class EasyMockGeneratorGroup extends AnAction {
         DataContext dataContext = e.getDataContext();
         Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
         PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-        String code = dialog.getNode().getCode();
-        if (null != code && null != code) {
+        node = dialog.getNode();
+        String code;
+        if (null != node && null != (code = node.getCode())) {
             WriteAction.run(() ->
                     CommandProcessor.getInstance().executeCommand(
                             editor.getProject(),
@@ -53,17 +61,41 @@ public class EasyMockGeneratorGroup extends AnAction {
 
         EditorModificationUtil.deleteSelectedText(editor);
         int caretOffset = editor.getCaretModel().getOffset();
-        PsiElement element = file.findElementAt(caretOffset);
-        PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);
         Document document = editor.getDocument();
         document.replaceString(caretOffset, caretOffset, value);
         int offset = caretOffset + value.length();
         editor.getCaretModel().moveToOffset(offset);
         PsiDocumentManager manager = PsiDocumentManager.getInstance(editor.getProject());
         manager.commitDocument(document);
-        CodeStyleManager.getInstance(editor.getProject()).reformat(method);
-        JavaAutoImportOptions options = new JavaAutoImportOptions(editor.getProject());
-        options.apply();
+        // import class
+        if (file instanceof PsiJavaFile) {
+            Set<PsiClass> imported = new HashSet<>();
+            PsiImportStatement[] statements = ((PsiJavaFile) file).getImportList().getImportStatements();
+            for (PsiImportStatement statement : statements) {
+                PsiClass psiClass = PsiType.getTypeByName(statement.getQualifiedName(), editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+                imported.add(psiClass);
+            }
+            PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+            if (!imported.contains(easymock)) {
+                ((PsiJavaFile) file).importClass(easymock);
+            }
+            if (!imported.contains(node.getPsiClass())) {
+                ((PsiJavaFile) file).importClass(node.getPsiClass());
+                imported.add(node.getPsiClass());
+            }
+            for (MethodSelectInfoNode methodNode : node.getMethods().values()) {
+                for (SelectInfoNode infoNode : methodNode.getParamDepNode().values()) {
+                    PsiClass psiClass = infoNode.getPsiClass();
+                    if (!imported.contains(psiClass)) {
+                        ((PsiJavaFile) file).importClass(psiClass);
+                    }
+                    ((PsiJavaFile) file).importClass(infoNode.getPsiClass());
+                }
+            }
+        }
+
+        // format code
+        CodeStyleManager.getInstance(editor.getProject()).reformat(file);
     }
 
 }

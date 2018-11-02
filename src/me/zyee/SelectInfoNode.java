@@ -48,6 +48,10 @@ public class SelectInfoNode implements CodeInfoNode {
         return psiClass;
     }
 
+    public Map<PsiMethod, MethodSelectInfoNode> getMethods() {
+        return methods;
+    }
+
     public void addMethodSelectInfoNode(PsiMethod method, MethodSelectInfoNode node) {
         methods.put(method, node);
     }

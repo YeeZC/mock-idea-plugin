@@ -44,6 +44,13 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         this.returnTypeDepNode = returnTypeDepNode;
     }
 
+    public Map<Integer, SelectInfoNode> getParamDepNode() {
+        return paramDepNode;
+    }
+
+    public SelectInfoNode getReturnTypeDepNode() {
+        return returnTypeDepNode;
+    }
 
     @Override
     public String getCode() {
@@ -70,7 +77,7 @@ public class MethodSelectInfoNode implements CodeInfoNode {
                 mockBeanName = mockBeanName.substring(0, index);
             }
             mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
-            buffer.append(String.format(".addReturn(%s).anyTimes()", mockBeanName));
+            buffer.append(String.format(".andReturn(%s).anyTimes()", mockBeanName));
         }
         buffer.append(";\n");
         paramBuilder.append(returnTypeBuilder).append(buffer);
