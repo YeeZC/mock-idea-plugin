@@ -13,8 +13,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.List;
 
 /**
@@ -50,10 +48,6 @@ public abstract class CodePanel extends JPanel {
         add(textScrollPane);
     }
 
-    public void addMouseClickListener(MouseClickListener mouseListener) {
-        list.addMouseListener(mouseListener);
-    }
-
     public JTextArea getTextPane() {
         return textPane;
     }
@@ -74,27 +68,5 @@ public abstract class CodePanel extends JPanel {
 
     public PsiElementList getList() {
         return list;
-    }
-
-    public interface MouseClickListener extends MouseListener {
-        @Override
-        default void mouseClicked(MouseEvent e) {
-
-        }
-
-        @Override
-        default void mouseReleased(MouseEvent e) {
-
-        }
-
-        @Override
-        default void mouseEntered(MouseEvent e) {
-
-        }
-
-        @Override
-        default void mouseExited(MouseEvent e) {
-
-        }
     }
 }
