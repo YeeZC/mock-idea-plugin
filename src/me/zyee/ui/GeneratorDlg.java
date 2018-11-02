@@ -44,22 +44,24 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
 import me.zyee.SelectedInfo;
-import me.zyee.ui.model.ListModel;
 import me.zyee.ui.model.MyGotoClassModel;
 import me.zyee.ui.model.SubclassGotoClassModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -88,9 +90,6 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     private TabbedPaneWrapper myTabbedPane;
     private ChooseByNamePanel myGotoByNamePanel;
     private PsiClass myInitialClass;
-
-    private ListModel listModel;
-    private static final Comparator<PsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
 
     private CodePanel codePanel;
 
@@ -202,8 +201,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private JPanel createMethodListPanel() {
-        listModel = new ListModel(c);
-        codePanel = new CodePanel("Method:", listModel) {
+        codePanel = new CodePanel("Method:") {
             @Override
             protected PsiClass getPsiClass() {
                 return calcSelectedClass();

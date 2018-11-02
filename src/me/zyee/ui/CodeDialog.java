@@ -7,11 +7,10 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.util.ui.JBUI;
 import me.zyee.SelectedInfo;
-import me.zyee.ui.model.ListModel;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.util.Comparator;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 import java.util.List;
 
 /**
@@ -19,15 +18,12 @@ import java.util.List;
  * @date 2018/11/1
  */
 public class CodeDialog extends DialogWrapper {
-    private static final Comparator<PsiMethod> c = (var0, var1) -> var0.getName().compareToIgnoreCase(var1.getName());
-    private ListModel model;
     private PsiClass psiClass;
     private SelectedInfo info;
     private CodePanel codePanel;
 
     protected CodeDialog(@Nullable Project project, PsiClass psiClass) {
         super(project, false);
-        model = new ListModel(c);
         this.psiClass = psiClass;
         info = new SelectedInfo();
         info.setPsiClass(psiClass);
@@ -40,7 +36,7 @@ public class CodeDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        codePanel = new CodePanel(psiClass.getQualifiedName(), model) {
+        codePanel = new CodePanel(psiClass.getQualifiedName()) {
             @Override
             protected PsiClass getPsiClass() {
                 return psiClass;

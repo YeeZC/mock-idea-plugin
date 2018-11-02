@@ -3,7 +3,7 @@ package me.zyee.ui.model;
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.SortedListModel;
 
-import javax.swing.*;
+import javax.swing.JList;
 import java.util.Comparator;
 
 /**
