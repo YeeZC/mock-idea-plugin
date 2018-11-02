@@ -2,8 +2,8 @@ package me.zyee;
 
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiType;
 
 import java.util.List;
 
@@ -41,9 +41,9 @@ public class SelectedInfo {
                 }
                 buffer.setCharAt(buffer.length() - 1, ')');
                 buffer.append(")");
-                PsiType type = method.getReturnType();
-                if (null != type && !type.equalsToText("void")) {
-                    buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiType:", "")));
+                PsiElement type = method.getReturnTypeElement();
+                if (null != type && !"void".equals(type.getText())) {
+                    buffer.append(String.format(".addReturn(%s)", type.getText()));
                 }
                 buffer.append(";\n");
             }
