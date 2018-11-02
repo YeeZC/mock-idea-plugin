@@ -13,7 +13,9 @@ import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.util.ui.JBUI;
-import me.zyee.SelectedInfo;
+import me.zyee.CustomPsiClass;
+import me.zyee.MethodSelectInfoNode;
+import me.zyee.SelectInfoNode;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -23,33 +25,36 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author yee
  * @date 2018/11/1
  */
 public class ParameterPanel extends JPanel {
-    protected PsiElementList<PsiClass> list;
+    protected PsiElementList<CustomPsiClass> parameterList;
     protected PsiElementList<PsiMethod> returnType;
     private JTextArea textPane;
     private TabbedPaneWrapper tabbedPane;
     private Project project;
     private PsiClass returnTypeClass;
     private PsiMethod method;
-    private Disposable disposable;
+    private MethodSelectInfoNode node;
+    private SelectInfoNode returnTypeNode;
+    private Set<String> contains;
 
-    public ParameterPanel(Project project, PsiMethod method, Disposable disposable) {
+    public ParameterPanel(String beanName, Project project, PsiMethod method, Disposable disposable) {
         this.project = project;
         this.method = method;
-        this.disposable = disposable;
         setLayout(new VerticalFlowLayout());
         tabbedPane = new TabbedPaneWrapper(disposable);
         String className = method.getReturnType().getCanonicalText();
         returnTypeClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.projectScope(project));
-        list = new PsiElementList<>();
-        list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(list);
+        parameterList = new PsiElementList<>(false);
+        parameterList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(parameterList);
         listScrollPane.setPreferredSize(JBUI.size(500, 100));
         tabbedPane.addTab("Parameter", listScrollPane);
 
@@ -57,11 +62,14 @@ public class ParameterPanel extends JPanel {
         returnType.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         returnType.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
             List<PsiMethod> methods = returnType.getSelectedValuesList();
-            SelectedInfo info = new SelectedInfo();
-            info.setPsiClass(returnTypeClass);
-            info.setMethods(methods);
-            textPane.setText(info.toString());
+            returnTypeNode.calculateMethodSelected(methods);
+            returnTypeNode.setContains(contains == null ? new HashSet<>() : contains);
+            node.setReturnTypeDepNode(returnTypeNode);
+            textPane.setText(node.getCode());
         }));
+        node = new MethodSelectInfoNode(beanName);
+        node.setMethod(method);
+
 
         JScrollPane returnTypeScroll = ScrollPaneFactory.createScrollPane(returnType);
         returnTypeScroll.setPreferredSize(JBUI.size(500, 100));
@@ -77,22 +85,25 @@ public class ParameterPanel extends JPanel {
         (new DoubleClickListener() {
             @Override
             protected boolean onDoubleClick(MouseEvent event) {
-                int index = list.locationToIndex(event.getPoint());
+                int index = parameterList.locationToIndex(event.getPoint());
                 if (index >= 0) {
-                    PsiClass psiClass = list.getModel().getElementAt(index);
+                    CustomPsiClass psiClass = parameterList.getModel().getElementAt(index);
                     if (null != psiClass && psiClass.isInterface()) {
                         CodeDialog codeDialog = new CodeDialog(project, psiClass);
                         codeDialog.show();
-                        SelectedInfo info = codeDialog.getInfo();
-                        if (info != null) {
-                            textPane.append(info.toString());
+                        SelectInfoNode info = codeDialog.getInfo();
+                        if (null != info) {
+                            node.addParamNode(psiClass.getOrder(), info);
+                            node.setContains(contains);
+                            textPane.setText(node.getCode());
                         }
+
                     }
                     return true;
                 }
                 return false;
             }
-        }).installOn(this.list);
+        }).installOn(this.parameterList);
 
         (new DoubleClickListener() {
             @Override
@@ -100,10 +111,15 @@ public class ParameterPanel extends JPanel {
                 int index = returnType.locationToIndex(event.getPoint());
                 if (index >= 0) {
                     PsiMethod psiMethod = returnType.getModel().getElementAt(index);
-                    ParameterDlg dlg = new ParameterDlg(project, psiMethod);
-                    dlg.show();
-                    String code = dlg.getCode();
-                    textPane.append(code);
+                    ParameterDlg dlg = new ParameterDlg(beanName, project, psiMethod);
+                    dlg.setContains(contains);
+                    dlg.showDialog();
+                    MethodSelectInfoNode methodNode = dlg.getNode();
+                    if (methodNode != null) {
+                        returnTypeNode.addMethodSelectInfoNode(psiMethod, methodNode);
+                        node.setReturnTypeDepNode(returnTypeNode);
+                    }
+                    textPane.setText(node.getCode());
                     return true;
                 }
                 return false;
@@ -111,15 +127,15 @@ public class ParameterPanel extends JPanel {
         }).installOn(this.returnType);
     }
 
-
-    public JTextArea getTextPane() {
-        return textPane;
+    public void setContains(Set<String> contains) {
+        this.contains = contains;
     }
 
     public void loadData() {
         PsiParameter[] parameters = method.getParameterList().getParameters();
-        List<PsiClass> classes = new ArrayList<>();
-        for (PsiParameter parameter : parameters) {
+        List<CustomPsiClass> classes = new ArrayList<>();
+        for (int i = 0; i < parameters.length; i++) {
+            PsiParameter parameter = parameters[i];
             String className = parameter.getType().getCanonicalText();
             int index = className.indexOf("<");
             if (index > 0) {
@@ -127,12 +143,17 @@ public class ParameterPanel extends JPanel {
             }
             PsiClass psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
             if (null != psiClass) {
-                classes.add(psiClass);
+                classes.add(new CustomPsiClass(psiClass, i));
             }
         }
-        list.addElements(classes);
+        parameterList.addElements(classes);
         if (null != returnTypeClass) {
+            returnTypeNode = new SelectInfoNode(returnTypeClass);
             returnType.addElements(returnTypeClass.getMethods());
         }
+    }
+
+    public MethodSelectInfoNode getNode() {
+        return node;
     }
 }

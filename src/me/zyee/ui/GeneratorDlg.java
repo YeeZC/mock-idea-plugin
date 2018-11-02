@@ -28,12 +28,10 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiMethod;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
 import com.intellij.psi.util.PsiUtilCore;
-import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TreeSpeedSearch;
@@ -42,6 +40,7 @@ import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
+import me.zyee.SelectInfoNode;
 import me.zyee.ui.model.MyGotoClassModel;
 import me.zyee.ui.model.SubclassGotoClassModel;
 import org.jetbrains.annotations.NotNull;
@@ -54,11 +53,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.BorderLayout;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -90,6 +84,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
 
     private CodePanel codePanel;
 
+    private SelectInfoNode node;
 
     public GeneratorDlg(String title, Project project) {
         this(title, project, PsiClass.class, null);
@@ -198,27 +193,12 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private JPanel createMethodListPanel() {
-        codePanel = new CodePanel("Method:") {
+        codePanel = new CodePanel(getProject(), "Method:") {
             @Override
             protected PsiClass getPsiClass() {
                 return calcSelectedClass();
             }
         };
-        PsiElementList<PsiMethod> list = codePanel.getList();
-        (new DoubleClickListener() {
-            @Override
-            protected boolean onDoubleClick(MouseEvent event) {
-                int index = list.locationToIndex(event.getPoint());
-                if (index >= 0) {
-                    PsiMethod psiMethod = list.getModel().getElementAt(index);
-                    ParameterDlg dlg = new ParameterDlg(getProject(), psiMethod);
-                    dlg.show();
-                    codePanel.getTextPane().append(dlg.getCode());
-                    return true;
-                }
-                return false;
-            }
-        }).installOn(list);
         return codePanel;
     }
 
@@ -276,9 +256,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
             if (!this.myClassFilter.isAccepted(this.mySelectedClass)) {
                 Messages.showErrorDialog(this.myTabbedPane.getComponent(), SymbolPresentationUtil.getSymbolPresentableText(this.mySelectedClass) + " is not acceptable");
             } else {
-                Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
-                Transferable tText = new StringSelection(codePanel.getTextPane().getText());
-                clip.setContents(tText, null);
+                node = codePanel.getNode();
                 GeneratorDlg.super.doOKAction();
             }
         }
@@ -357,10 +335,6 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         }
 
         super.dispose();
-    }
-
-    public String getValue(){
-        return codePanel.getTextPane().getText();
     }
 
     @Override
@@ -446,8 +420,9 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return myIsShowLibraryContents;
     }
 
-    public String getCode() {
-        return codePanel.getTextPane().getText().trim();
+    public SelectInfoNode getNode() {
+        node.getContains().clear();
+        return node;
     }
 
     private class MyCallback extends ChooseByNamePopupComponent.Callback {

@@ -32,7 +32,7 @@
     <!-- Add your actions here -->
     <action id="me.zyee.easymock.generator" class="me.zyee.action.EasyMockGeneratorGroup" text="EasyMockGenerator"
             description="EasyMockGenerator">
-      <add-to-group group-id="GenerateGroup" anchor="first"/>
+        <add-to-group group-id="GenerateGroup" anchor="last"/>
     </action>
   </actions>
 

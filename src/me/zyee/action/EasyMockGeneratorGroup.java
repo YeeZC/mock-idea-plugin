@@ -1,31 +1,25 @@
 package me.zyee.action;
 
-import com.intellij.codeInsight.lookup.impl.LookupImpl;
-import com.intellij.injected.editor.DocumentWindow;
-import com.intellij.lang.injection.InjectedLanguageManager;
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.application.options.editor.JavaAutoImportOptions;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.UndoConfirmationPolicy;
-import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.*;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtilBase;
 import me.zyee.ui.GeneratorDlg;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.jetbrains.java.generate.GenerateToStringWorker;
-import org.jetbrains.java.generate.GenerationUtil;
-import org.jetbrains.java.generate.velocity.VelocityFactory;
-
-import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author yee
@@ -41,7 +35,17 @@ public class EasyMockGeneratorGroup extends AnAction {
         DataContext dataContext = e.getDataContext();
         Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
         PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-        WriteAction.run(() -> CommandProcessor.getInstance().executeCommand(editor.getProject(), () -> EasyMockGeneratorGroup.this.replace(editor, dialog.getValue(), file), null, null, UndoConfirmationPolicy.DEFAULT, editor.getDocument()));
+        String code = dialog.getNode().getCode();
+        if (null != code && null != code) {
+            WriteAction.run(() ->
+                    CommandProcessor.getInstance().executeCommand(
+                            editor.getProject(),
+                            () -> replace(editor, code, file),
+                            null,
+                            null,
+                            UndoConfirmationPolicy.DEFAULT,
+                            editor.getDocument()));
+        }
     }
 
 
@@ -53,11 +57,13 @@ public class EasyMockGeneratorGroup extends AnAction {
         PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);
         Document document = editor.getDocument();
         document.replaceString(caretOffset, caretOffset, value);
-        int offset =  caretOffset + value.length();
+        int offset = caretOffset + value.length();
         editor.getCaretModel().moveToOffset(offset);
         PsiDocumentManager manager = PsiDocumentManager.getInstance(editor.getProject());
         manager.commitDocument(document);
         CodeStyleManager.getInstance(editor.getProject()).reformat(method);
+        JavaAutoImportOptions options = new JavaAutoImportOptions(editor.getProject());
+        options.apply();
     }
 
 }

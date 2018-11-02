@@ -4,14 +4,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiMethod;
 import com.intellij.util.ui.JBUI;
-import me.zyee.SelectedInfo;
+import me.zyee.SelectInfoNode;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import java.util.List;
 
 /**
  * @author yee
@@ -19,12 +17,14 @@ import java.util.List;
  */
 public class CodeDialog extends DialogWrapper {
     private PsiClass psiClass;
-    private SelectedInfo info;
+    private SelectInfoNode info;
     private CodePanel codePanel;
+    private Project project;
 
     protected CodeDialog(@Nullable Project project, PsiClass psiClass) {
         super(project, false);
         this.psiClass = psiClass;
+        this.project = project;
         setSize(510, 310);
         this.init();
     }
@@ -34,7 +34,7 @@ public class CodeDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        codePanel = new CodePanel(psiClass.getQualifiedName()) {
+        codePanel = new CodePanel(project, psiClass.getQualifiedName()) {
             @Override
             protected PsiClass getPsiClass() {
                 return psiClass;
@@ -48,16 +48,12 @@ public class CodeDialog extends DialogWrapper {
 
     @Override
     protected void doOKAction() {
-        PsiElementList<PsiMethod> list = codePanel.getList();
-        List<PsiMethod> methods = list.getSelectedValuesList();
-        info = new SelectedInfo();
-        info.setPsiClass(psiClass);
-        info.setMethods(methods);
+        info = codePanel.getNode();
         super.doOKAction();
     }
 
 
-    public SelectedInfo getInfo() {
+    public SelectInfoNode getInfo() {
         return info;
     }
 }
