@@ -1,18 +1,31 @@
 package me.zyee.action;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.CommonDataKeys;
-import com.intellij.openapi.actionSystem.LangDataKeys;
+import com.intellij.codeInsight.lookup.impl.LookupImpl;
+import com.intellij.injected.editor.DocumentWindow;
+import com.intellij.lang.injection.InjectedLanguageManager;
+import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.UndoConfirmationPolicy;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorModificationUtil;
+import com.intellij.openapi.editor.*;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiFile;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.psi.*;
+import com.intellij.psi.codeStyle.CodeStyleManager;
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.psi.util.PsiUtilBase;
 import me.zyee.ui.GeneratorDlg;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.jetbrains.java.generate.GenerateToStringWorker;
+import org.jetbrains.java.generate.GenerationUtil;
+import org.jetbrains.java.generate.velocity.VelocityFactory;
+
+import java.io.StringWriter;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author yee
@@ -25,29 +38,26 @@ public class EasyMockGeneratorGroup extends AnAction {
         Project project = getEventProject(e);
         GeneratorDlg dialog = new GeneratorDlg("", project);
         dialog.showDialog();
+        DataContext dataContext = e.getDataContext();
+        Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
         PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-        new WriteCommandAction.Simple(project, file) {
-            @Override
-            protected void run() {
-                Editor editor = e.getData(CommonDataKeys.EDITOR);
-                CommandProcessor.getInstance().executeCommand(editor.getProject(), () -> replace(editor, dialog.getCode()), null, null, UndoConfirmationPolicy.DEFAULT, editor.getDocument());
-            }
-        }.execute();
+        WriteAction.run(() -> CommandProcessor.getInstance().executeCommand(editor.getProject(), () -> EasyMockGeneratorGroup.this.replace(editor, dialog.getValue(), file), null, null, UndoConfirmationPolicy.DEFAULT, editor.getDocument()));
     }
 
-    private void replace(Editor editor, String code) {
-        editor.getCaretModel().runForEachCaret(caret -> {
-            EditorModificationUtil.deleteSelectedText(editor);
-            int caretOffset = editor.getCaretModel().getOffset();
-            int offset = insertLookupInDocument(caretOffset, editor.getDocument(), code);
-            editor.getCaretModel().moveToOffset(offset);
-            editor.getSelectionModel().removeSelection();
-        });
+
+    private void replace(Editor editor, String value, PsiFile file) {
+
+        EditorModificationUtil.deleteSelectedText(editor);
+        int caretOffset = editor.getCaretModel().getOffset();
+        PsiElement element = file.findElementAt(caretOffset);
+        PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);
+        Document document = editor.getDocument();
+        document.replaceString(caretOffset, caretOffset, value);
+        int offset =  caretOffset + value.length();
+        editor.getCaretModel().moveToOffset(offset);
+        PsiDocumentManager manager = PsiDocumentManager.getInstance(editor.getProject());
+        manager.commitDocument(document);
+        CodeStyleManager.getInstance(editor.getProject()).reformat(method);
     }
 
-    private int insertLookupInDocument(int caretOffset, Document document, String lookupString) {
-        int lookupStart = Math.min(caretOffset, Math.max(caretOffset, 0));
-        document.replaceString(lookupStart, caretOffset, lookupString);
-        return lookupStart + lookupString.length();
-    }
 }
