@@ -5,9 +5,9 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
 import com.intellij.util.ui.JBUI;
-import me.zyee.ListModel;
 import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
+import me.zyee.ui.model.ListModel;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;

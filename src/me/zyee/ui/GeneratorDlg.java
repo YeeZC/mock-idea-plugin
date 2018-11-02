@@ -2,7 +2,6 @@ package me.zyee.ui;
 
 import com.intellij.ide.IdeBundle;
 import com.intellij.ide.projectView.BaseProjectTreeBuilder;
-import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure;
 import com.intellij.ide.projectView.impl.ProjectAbstractTreeStructureBase;
 import com.intellij.ide.projectView.impl.ProjectTreeBuilder;
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode;
@@ -12,21 +11,17 @@ import com.intellij.ide.util.gotoByName.ChooseByNameModel;
 import com.intellij.ide.util.gotoByName.ChooseByNamePanel;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopupComponent;
-import com.intellij.ide.util.gotoByName.GotoClassModel2;
 import com.intellij.ide.util.treeView.AlphaComparator;
 import com.intellij.ide.util.treeView.NodeRenderer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.JBMenuItem;
 import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.VerticalFlowLayout;
-import com.intellij.openapi.util.Condition;
-import com.intellij.openapi.util.Conditions;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.IdeFocusManager;
@@ -35,27 +30,23 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
-import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TreeSpeedSearch;
 import com.intellij.ui.treeStructure.Tree;
-import com.intellij.util.ArrayUtil;
-import com.intellij.util.Processor;
-import com.intellij.util.Query;
 import com.intellij.util.containers.ContainerUtil;
-import com.intellij.util.indexing.FindSymbolParameters;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
-import me.zyee.ListModel;
+import me.zyee.GeneratorProjectTreeStructure;
 import me.zyee.ListPsiMethod;
 import me.zyee.SelectedInfo;
+import me.zyee.ui.model.ListModel;
+import me.zyee.ui.model.MyGotoClassModel;
+import me.zyee.ui.model.SubclassGotoClassModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -68,7 +59,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -110,7 +100,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     public GeneratorDlg(String title, Project project, Class<PsiClass> elementClass, @Nullable PsiClass initialClass) {
-        this(title, project, GlobalSearchScope.projectScope(project), elementClass, (Filter) null, initialClass);
+        this(title, project, GlobalSearchScope.allScope(project), elementClass, null, initialClass);
     }
 
     public GeneratorDlg(String title, @NotNull Project project, GlobalSearchScope scope, @NotNull Class<PsiClass> elementClass, @Nullable Filter<PsiClass> classFilter, @Nullable PsiClass initialClass) {
@@ -142,58 +132,24 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return element -> element.isInterface();
     }
 
+    @Nullable
+    private static Filter<PsiClass> createFilter(@Nullable final ClassFilter classFilter) {
+        return classFilter == null ? null : element -> ReadAction.compute(() -> classFilter.isAccepted(element));
+    }
+
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        DefaultTreeModel model = new DefaultTreeModel(new DefaultMutableTreeNode());
-        this.myTree = new Tree(model);
-        ProjectAbstractTreeStructureBase treeStructure = new AbstractProjectTreeStructure(this.myProject) {
-            @Override
-            public boolean isFlattenPackages() {
-                return false;
-            }
+        panel.add(createSearchPanel());
+        panel.add(createMethodListPanel());
+        return panel;
+    }
 
-            @Override
-            public boolean isShowMembers() {
-                return GeneratorDlg.this.myIsShowMembers;
-            }
-
-            @Override
-            public boolean isHideEmptyMiddlePackages() {
-                return true;
-            }
-
-            @Override
-            public boolean isAbbreviatePackageNames() {
-                return false;
-            }
-
-            @Override
-            public boolean isShowLibraryContents() {
-                return GeneratorDlg.this.myIsShowLibraryContents;
-            }
-
-            @Override
-            public boolean isShowModules() {
-                return false;
-            }
-        };
-        this.myBuilder = new ProjectTreeBuilder(this.myProject, this.myTree, model, AlphaComparator.INSTANCE, treeStructure);
-        this.myTree.setRootVisible(false);
-        this.myTree.setShowsRootHandles(true);
-        this.myTree.expandRow(0);
-        this.myTree.getSelectionModel().setSelectionMode(1);
-        this.myTree.setCellRenderer(new NodeRenderer());
-        UIUtil.setLineStyleAngled(this.myTree);
-        JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(this.myTree);
-        scrollPane.setPreferredSize(JBUI.size(500, 100));
-        scrollPane.putClientProperty(UIUtil.KEEP_BORDER_SIDES, 13);
-        this.myTree.addTreeSelectionListener(e -> GeneratorDlg.this.handleSelectionChanged());
-        new TreeSpeedSearch(this.myTree);
+    private JComponent createSearchPanel() {
+        JScrollPane scrollPane = initTreeScrollPanel();
         this.myTabbedPane = new TabbedPaneWrapper(this.getDisposable());
         final JPanel dummyPanel = new JPanel(new BorderLayout());
-        String name = null;
-        this.myGotoByNamePanel = new ChooseByNamePanel(this.myProject, this.createChooseByNameModel(), (String) name, this.myScope.isSearchInLibraries(), this.getContext()) {
+        this.myGotoByNamePanel = new ChooseByNamePanel(this.myProject, this.createChooseByNameModel(), "", this.myScope.isSearchInLibraries(), this.getContext()) {
             @Override
             protected void showTextFieldPanel() {
             }
@@ -212,8 +168,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
             @Override
             @NotNull
             protected Set<Object> filter(@NotNull Set<Object> elements) {
-                Set var10000 = GeneratorDlg.this.doFilter(elements);
-                return var10000;
+                return GeneratorDlg.this.doFilter(elements);
             }
 
             @Override
@@ -239,17 +194,12 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
             }
         };
         Disposer.register(this.myDisposable, this.myGotoByNamePanel);
-        this.myTabbedPane.addTab(IdeBundle.message("tab.chooser.search.by.name", new Object[0]), dummyPanel);
-        this.myTabbedPane.addTab(IdeBundle.message("tab.chooser.project", new Object[0]), scrollPane);
+        this.myTabbedPane.addTab(IdeBundle.message("tab.chooser.search.by.name"), dummyPanel);
+        this.myTabbedPane.addTab(IdeBundle.message("tab.chooser.project"), scrollPane);
         this.myGotoByNamePanel.invoke(new GeneratorDlg.MyCallback(), this.getModalityState(), false);
         this.myTabbedPane.addChangeListener(e -> GeneratorDlg.this.handleSelectionChanged());
-        Component component = this.myTabbedPane.getComponent();
-        panel.add(component);
-
-        panel.add(createMethodListPanel());
-        return panel;
+        return this.myTabbedPane.getComponent();
     }
-
 
     private JPanel createMethodListPanel() {
         listModel = new ListModel(c);
@@ -308,27 +258,37 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return result;
     }
 
+    @NotNull
+    private JScrollPane initTreeScrollPanel() {
+        DefaultTreeModel model = new DefaultTreeModel(new DefaultMutableTreeNode());
+        this.myTree = new Tree(model);
+        ProjectAbstractTreeStructureBase treeStructure = new GeneratorProjectTreeStructure(this.myProject, this);
+        this.myBuilder = new ProjectTreeBuilder(this.myProject, this.myTree, model, AlphaComparator.INSTANCE, treeStructure);
+        this.myTree.setRootVisible(false);
+        this.myTree.setShowsRootHandles(true);
+        this.myTree.expandRow(0);
+        this.myTree.getSelectionModel().setSelectionMode(1);
+        this.myTree.setCellRenderer(new NodeRenderer());
+        UIUtil.setLineStyleAngled(this.myTree);
+        JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(this.myTree);
+        scrollPane.setPreferredSize(JBUI.size(500, 100));
+        scrollPane.putClientProperty(UIUtil.KEEP_BORDER_SIDES, 13);
+        this.myTree.addTreeSelectionListener(e -> GeneratorDlg.this.handleSelectionChanged());
+        new TreeSpeedSearch(this.myTree);
+        return scrollPane;
+    }
+
     protected ChooseByNameModel createChooseByNameModel() {
         if (this.myBaseClass == null) {
-            return new GeneratorDlg.MyGotoClassModel(this.myProject, this);
+            return new MyGotoClassModel(this.myProject, this);
         } else {
-            GeneratorDlg.BaseClassInheritorsProvider inheritorsProvider = this.getInheritorsProvider(this.myBaseClass);
+            BaseClassInheritorsProvider inheritorsProvider = this.getInheritorsProvider(this.myBaseClass);
             if (inheritorsProvider != null) {
-                return new GeneratorDlg.SubclassGotoClassModel(this.myProject, this, inheritorsProvider);
+                return new SubclassGotoClassModel(this.myProject, this, inheritorsProvider);
             } else {
                 throw new IllegalStateException("inheritors provider is null");
             }
         }
-    }
-
-    private void handleSelectionChanged() {
-        PsiClass selection = this.calcSelectedClass();
-        if (selection != null) {
-            listModel.setMethods(selection.getMethods());
-            listModel.fireContentsChanged(codePanel.getList());
-        }
-//        this.setOKActionEnabled(selection != null);
-
     }
 
     @Override
@@ -431,25 +391,25 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return this.myGotoByNamePanel.getPreferredFocusedComponent();
     }
 
-    @NotNull
-    protected Project getProject() {
-        Project var10000 = this.myProject;
-        return var10000;
+    private void handleSelectionChanged() {
+        PsiClass selection = this.calcSelectedClass();
+        if (selection != null) {
+            codePanel.loadClass();
+        }
     }
 
-    GlobalSearchScope getScope() {
+    @NotNull
+    protected Project getProject() {
+        return this.myProject;
+    }
+
+    public GlobalSearchScope getScope() {
         return this.myScope;
     }
 
     @NotNull
-    protected Filter<PsiClass> getFilter() {
-        Filter var10000 = this.myClassFilter;
-
-        return var10000;
-    }
-
-    PsiClass getBaseClass() {
-        return this.myBaseClass;
+    public Filter<PsiClass> getFilter() {
+        return this.myClassFilter;
     }
 
     PsiClass getInitialClass() {
@@ -468,170 +428,8 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return this.myGotoByNamePanel;
     }
 
-    private class MyCallback extends ChooseByNamePopupComponent.Callback {
-        private MyCallback() {
-        }
-
-        @Override
-        public void elementChosen(Object element) {
-            GeneratorDlg.this.mySelectedClass = (PsiClass) element;
-            GeneratorDlg.this.close(0);
-        }
-    }
-
-    private static class SubclassGotoClassModel<T extends PsiNamedElement> extends GeneratorDlg.MyGotoClassModel {
-        private final GeneratorDlg.BaseClassInheritorsProvider myInheritorsProvider;
-        private boolean myFastMode;
-
-        public SubclassGotoClassModel(@NotNull Project project, @NotNull GeneratorDlg treeClassChooserDialog, @NotNull GeneratorDlg.BaseClassInheritorsProvider inheritorsProvider) {
-            super(project, treeClassChooserDialog);
-            this.myFastMode = true;
-            this.myInheritorsProvider = inheritorsProvider;
-
-            assert this.myInheritorsProvider.getBaseClass() != null;
-
-        }
-
-        @Override
-        public void processNames(final Processor<String> nameProcessor, boolean checkBoxState) {
-            if (this.myFastMode) {
-                this.myFastMode = this.myInheritorsProvider.searchForInheritorsOfBaseClass().forEach(new Processor<PsiClass>() {
-                    private final long start = System.currentTimeMillis();
-
-                    @Override
-                    public boolean process(PsiClass aClass) {
-                        if (System.currentTimeMillis() - this.start > 500L && !ApplicationManager.getApplication().isUnitTestMode()) {
-                            return false;
-                        } else {
-                            if (GeneratorDlg.SubclassGotoClassModel.this.getTreeClassChooserDialog().getFilter().isAccepted(aClass) && aClass.getName() != null) {
-                                nameProcessor.process(aClass.getName());
-                            }
-
-                            return true;
-                        }
-                    }
-                });
-            }
-
-            if (!this.myFastMode) {
-                String[] var3 = this.myInheritorsProvider.getNames();
-                int var4 = var3.length;
-
-                for (int var5 = 0; var5 < var4; ++var5) {
-                    String name = var3[var5];
-                    nameProcessor.process(name);
-                }
-            }
-
-        }
-
-        @Override
-        protected boolean isAccepted(PsiClass aClass) {
-            if (this.myFastMode) {
-                return this.getTreeClassChooserDialog().getFilter().isAccepted(aClass);
-            } else {
-                return (aClass == this.getTreeClassChooserDialog().getBaseClass() || this.myInheritorsProvider.isInheritorOfBaseClass(aClass)) && this.getTreeClassChooserDialog().getFilter().isAccepted(aClass);
-            }
-        }
-    }
-
-    public abstract static class BaseClassInheritorsProvider {
-        private final PsiClass myBaseClass;
-        private final GlobalSearchScope myScope;
-
-        public BaseClassInheritorsProvider(PsiClass baseClass, GlobalSearchScope scope) {
-            this.myBaseClass = baseClass;
-            this.myScope = scope;
-        }
-
-        public PsiClass getBaseClass() {
-            return this.myBaseClass;
-        }
-
-        public GlobalSearchScope getScope() {
-            return this.myScope;
-        }
-
-        @NotNull
-        protected abstract Query<PsiClass> searchForInheritors(PsiClass var1, GlobalSearchScope var2, boolean var3);
-
-        protected abstract boolean isInheritor(PsiClass var1, PsiClass var2, boolean var3);
-
-        protected abstract String[] getNames();
-
-        protected Query<PsiClass> searchForInheritorsOfBaseClass() {
-            return this.searchForInheritors(this.myBaseClass, this.myScope, true);
-        }
-
-        protected boolean isInheritorOfBaseClass(PsiClass aClass) {
-            return this.isInheritor(aClass, this.myBaseClass, true);
-        }
-    }
-
-    protected static class MyGotoClassModel extends GotoClassModel2 {
-        private final GeneratorDlg myTreeClassChooserDialog;
-
-        public MyGotoClassModel(@NotNull Project project, GeneratorDlg treeClassChooserDialog) {
-            super(project);
-            this.myTreeClassChooserDialog = treeClassChooserDialog;
-        }
-
-        GeneratorDlg getTreeClassChooserDialog() {
-            return this.myTreeClassChooserDialog;
-        }
-
-        @Override
-        @NotNull
-        public Object[] getElementsByName(@NotNull String name, @NotNull FindSymbolParameters parameters, @NotNull ProgressIndicator canceled) {
-            String patternName = parameters.getLocalPatternName();
-            java.util.List<PsiClass> classes = this.myTreeClassChooserDialog.getClassesByName(name, parameters.isSearchInLibraries(), patternName, this.myTreeClassChooserDialog.getScope());
-            Object[] var10000;
-            if (classes.size() == 0) {
-                var10000 = ArrayUtil.EMPTY_OBJECT_ARRAY;
-
-                return var10000;
-            } else if (classes.size() == 1) {
-                var10000 = this.isAccepted(classes.get(0)) ? ArrayUtil.toObjectArray(classes) : ArrayUtil.EMPTY_OBJECT_ARRAY;
-                return var10000;
-            } else {
-                Set<String> qNames = ContainerUtil.newHashSet();
-                List<PsiClass> list = new ArrayList(classes.size());
-                Iterator<PsiClass> var8 = classes.iterator();
-
-                while (var8.hasNext()) {
-                    PsiClass aClass = var8.next();
-                    if (qNames.add(this.getFullName(aClass)) && this.isAccepted(aClass)) {
-                        list.add(aClass);
-                    }
-                }
-
-                var10000 = ArrayUtil.toObjectArray(list);
-
-                return var10000;
-            }
-        }
-
-        @Override
-        @Nullable
-        public String getPromptText() {
-            return null;
-        }
-
-        protected boolean isAccepted(PsiClass aClass) {
-            return this.myTreeClassChooserDialog.getFilter().isAccepted(aClass);
-        }
-    }
-
-    @Nullable
-    private static Filter<PsiClass> createFilter(@Nullable final ClassFilter classFilter) {
-        return classFilter == null ? null : new Filter<PsiClass>() {
-            @Override
-            public boolean isAccepted(PsiClass element) {
-                return (Boolean) ReadAction.compute(() -> {
-                    return classFilter.isAccepted(element);
-                });
-            }
-        };
+    public PsiClass getBaseClass() {
+        return this.myBaseClass;
     }
 
     @Nullable
@@ -646,75 +444,34 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     @NotNull
-    protected List<PsiClass> getClassesByName(String name, boolean checkBoxState, String pattern, GlobalSearchScope searchScope) {
+    public List<PsiClass> getClassesByName(String name, boolean checkBoxState, String pattern, GlobalSearchScope searchScope) {
         PsiShortNamesCache cache = PsiShortNamesCache.getInstance(this.getProject());
         PsiClass[] classes = cache.getClassesByName(name, checkBoxState ? searchScope : GlobalSearchScope.projectScope(this.getProject()).intersectWith(searchScope));
-        ArrayList var10000 = ContainerUtil.newArrayList(classes);
-
-        return var10000;
+        return ContainerUtil.newArrayList(classes);
     }
 
     @NotNull
-    protected GeneratorDlg.BaseClassInheritorsProvider getInheritorsProvider(@NotNull PsiClass baseClass) {
+    protected BaseClassInheritorsProvider getInheritorsProvider(@NotNull PsiClass baseClass) {
 
-        GeneratorDlg.JavaInheritorsProvider var10000 = new GeneratorDlg.JavaInheritorsProvider(this.getProject(), baseClass, this.getScope());
-
-        return var10000;
+        return new JavaInheritorsProvider(this.getProject(), baseClass, this.getScope());
     }
 
-    public static class InheritanceJavaClassFilterImpl implements ClassFilter {
-        private final PsiClass myBase;
-        private final boolean myAcceptsSelf;
-        private final boolean myAcceptsInner;
-        @NotNull
-        private final Condition<? super PsiClass> myAdditionalCondition;
-
-        public InheritanceJavaClassFilterImpl(PsiClass base, boolean acceptsSelf, boolean acceptInner, @Nullable Condition<? super PsiClass> additionalCondition) {
-            this.myAcceptsSelf = acceptsSelf;
-            this.myAcceptsInner = acceptInner;
-            if (additionalCondition == null) {
-                additionalCondition = Conditions.alwaysTrue();
-            }
-
-            this.myAdditionalCondition = additionalCondition;
-            this.myBase = base;
-        }
-
-        @Override
-        public boolean isAccepted(PsiClass aClass) {
-            if (!this.myAcceptsInner && !(aClass.getParent() instanceof PsiJavaFile)) {
-                return false;
-            } else if (!this.myAdditionalCondition.value(aClass)) {
-                return false;
-            } else {
-                return this.myAcceptsSelf || !aClass.getManager().areElementsEquivalent(aClass, this.myBase);
-            }
-        }
+    public boolean isShowMembers() {
+        return myIsShowMembers;
     }
 
-    private static class JavaInheritorsProvider extends GeneratorDlg.BaseClassInheritorsProvider {
-        private final Project myProject;
+    public boolean isShowLibraryContents() {
+        return myIsShowLibraryContents;
+    }
 
-        public JavaInheritorsProvider(Project project, PsiClass baseClass, GlobalSearchScope scope) {
-            super(baseClass, scope);
-            this.myProject = project;
+    private class MyCallback extends ChooseByNamePopupComponent.Callback {
+        private MyCallback() {
         }
 
         @Override
-        @NotNull
-        protected Query<PsiClass> searchForInheritors(PsiClass baseClass, GlobalSearchScope searchScope, boolean checkDeep) {
-            Query var10000 = ClassInheritorsSearch.search(baseClass, searchScope, checkDeep);
-            return var10000;
-        }
-
-        @Override
-        protected boolean isInheritor(PsiClass clazz, PsiClass baseClass, boolean checkDeep) {
-            return clazz.isInheritor(baseClass, checkDeep);
-        }
-
-        @Override
-        protected String[] getNames() {
-            return PsiShortNamesCache.getInstance(this.myProject).getAllClassNames();
+        public void elementChosen(Object element) {
+            GeneratorDlg.this.mySelectedClass = (PsiClass) element;
+            GeneratorDlg.this.close(0);
         }
     }
 }

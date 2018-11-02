@@ -5,8 +5,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
 
-import javax.swing.*;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -15,7 +13,7 @@ import java.util.List;
  */
 public class SelectedInfo {
     private PsiClass psiClass;
-    private List<? extends JCheckBox> methods;
+    private List<? extends ListPsiMethod> methods;
 
     public SelectedInfo() {
     }
@@ -24,7 +22,7 @@ public class SelectedInfo {
         this.psiClass = psiClass;
     }
 
-    public void setMethods(List<? extends JCheckBox> methods) {
+    public void setMethods(List<? extends ListPsiMethod> methods) {
         this.methods = methods;
     }
 
@@ -35,22 +33,19 @@ public class SelectedInfo {
         String text = String.format("%s %s = EasyMock.createMock(%s.class);\n", className, beanName, className);
         StringBuffer buffer = new StringBuffer(text);
         if (null != methods) {
-            for (JCheckBox checkBox : methods) {
-                if (checkBox instanceof ListPsiMethod) {
-                    ListPsiMethod listPsiMethod = (ListPsiMethod) checkBox;
-                    PsiMethod method = listPsiMethod.getPsiMethod();
-                    buffer.append(String.format("EasyMock.expect(%s.%s( ", beanName, method.getName()));
-                    for (JvmParameter parameter : method.getParameters()) {
-                        buffer.append(parameter.getName()).append(",");
-                    }
-                    buffer.setCharAt(buffer.length() - 1, ')');
-                    buffer.append(")");
-                    PsiType type = method.getReturnType();
-                    if (null != type && !type.equalsToText("void")) {
-                        buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiType:", "")));
-                    }
-                    buffer.append(";\n");
+            for (ListPsiMethod listPsiMethod : methods) {
+                PsiMethod method = listPsiMethod.getPsiMethod();
+                buffer.append(String.format("EasyMock.expect(%s.%s( ", beanName, method.getName()));
+                for (JvmParameter parameter : method.getParameters()) {
+                    buffer.append(parameter.getName()).append(",");
                 }
+                buffer.setCharAt(buffer.length() - 1, ')');
+                buffer.append(")");
+                PsiType type = method.getReturnType();
+                if (null != type && !type.equalsToText("void")) {
+                    buffer.append(String.format(".addReturn(%s)", type.toString().replace("PsiType:", "")));
+                }
+                buffer.append(";\n");
             }
         }
         buffer.append(String.format("EasyMock.replay(%s);\n", beanName));

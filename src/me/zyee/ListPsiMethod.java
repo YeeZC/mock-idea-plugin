@@ -1,21 +1,15 @@
 package me.zyee;
 
 import com.intellij.lang.jvm.JvmParameter;
-import com.intellij.lang.jvm.types.JvmArrayType;
-import com.intellij.lang.jvm.types.JvmPrimitiveType;
 import com.intellij.lang.jvm.types.JvmReferenceType;
-import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
-
-import javax.swing.*;
-import javax.swing.border.Border;
 
 /**
  * @author yee
  * @date 2018/11/1
  */
-public class ListPsiMethod extends JCheckBox {
+public class ListPsiMethod {
     private PsiMethod psiMethod;
     private String method;
 
@@ -65,13 +59,7 @@ public class ListPsiMethod extends JCheckBox {
         return method;
     }
 
-    @Override
     public String getName() {
         return psiMethod.getName();
-    }
-
-    @Override
-    public String getText() {
-        return method;
     }
 }

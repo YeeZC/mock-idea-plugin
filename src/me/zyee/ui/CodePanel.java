@@ -80,32 +80,35 @@ public abstract class CodePanel extends JPanel {
 
     public void loadClass(PsiClass psiClass) {
         PsiMethod[] methods = psiClass.getMethods();
-        if (list.getModel() instanceof me.zyee.ListModel) {
-            ((me.zyee.ListModel) list.getModel()).setMethods(methods);
-            ((me.zyee.ListModel) list.getModel()).fireContentsChanged(list);
+        if (list.getModel() instanceof me.zyee.ui.model.ListModel) {
+            ((me.zyee.ui.model.ListModel) list.getModel()).setMethods(methods);
+            ((me.zyee.ui.model.ListModel) list.getModel()).fireContentsChanged(list);
         }
+        SelectedInfo info = new SelectedInfo();
+        info.setPsiClass(psiClass);
+        textPane.setText(info.toString());
     }
 
     protected abstract PsiClass getPsiClass();
 
     public interface MouseClickListener extends MouseListener {
         @Override
-        default public void mouseClicked(MouseEvent e) {
+        default void mouseClicked(MouseEvent e) {
 
         }
 
         @Override
-        default public void mouseReleased(MouseEvent e) {
+        default void mouseReleased(MouseEvent e) {
 
         }
 
         @Override
-        default public void mouseEntered(MouseEvent e) {
+        default void mouseEntered(MouseEvent e) {
 
         }
 
         @Override
-        default public void mouseExited(MouseEvent e) {
+        default void mouseExited(MouseEvent e) {
 
         }
     }

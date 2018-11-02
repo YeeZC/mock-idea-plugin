@@ -1,7 +1,8 @@
-package me.zyee;
+package me.zyee.ui.model;
 
 import com.intellij.psi.PsiMethod;
 import com.intellij.ui.SortedListModel;
+import me.zyee.ListPsiMethod;
 
 import javax.swing.*;
 import java.util.Comparator;
