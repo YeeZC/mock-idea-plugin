@@ -59,6 +59,7 @@ public class CodeDialog extends DialogWrapper {
         super.doOKAction();
     }
 
+
     public SelectedInfo getInfo() {
         return info;
     }
