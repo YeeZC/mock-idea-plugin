@@ -5,6 +5,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.ui.SortedListModel;
 import com.intellij.ui.components.JBList;
 
+import java.util.Collection;
 import java.util.Comparator;
 
 /**
@@ -25,6 +26,9 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
         model.addAll(elements);
     }
 
+    public void addElements(Collection<T> elements) {
+        model.addAll(elements);
+    }
     private class ListModel extends SortedListModel<T> {
 
         public ListModel() {
@@ -33,6 +37,14 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
 
         @Override
         public int[] addAll(T[] items) {
+            this.clear();
+            int[] result = super.addAll(items);
+            fireContentsChanged(PsiElementList.this, -1, -1);
+            return result;
+        }
+
+        @Override
+        public int[] addAll(Collection<T> items) {
             this.clear();
             int[] result = super.addAll(items);
             fireContentsChanged(PsiElementList.this, -1, -1);

@@ -25,8 +25,6 @@ public class CodeDialog extends DialogWrapper {
     protected CodeDialog(@Nullable Project project, PsiClass psiClass) {
         super(project, false);
         this.psiClass = psiClass;
-        info = new SelectedInfo();
-        info.setPsiClass(psiClass);
         setSize(510, 310);
         this.init();
     }
@@ -50,7 +48,10 @@ public class CodeDialog extends DialogWrapper {
 
     @Override
     protected void doOKAction() {
-        List<PsiMethod> methods = ((CodePanel) getContentPanel()).list.getSelectedValuesList();
+        PsiElementList<PsiMethod> list = codePanel.getList();
+        List<PsiMethod> methods = list.getSelectedValuesList();
+        info = new SelectedInfo();
+        info.setPsiClass(psiClass);
         info.setMethods(methods);
         super.doOKAction();
     }

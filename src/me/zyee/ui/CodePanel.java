@@ -72,6 +72,10 @@ public abstract class CodePanel extends JPanel {
 
     protected abstract PsiClass getPsiClass();
 
+    public PsiElementList getList() {
+        return list;
+    }
+
     public interface MouseClickListener extends MouseListener {
         @Override
         default void mouseClicked(MouseEvent e) {
