@@ -67,11 +67,11 @@ public class EasyMockConfiguration implements SearchableConfigurable {
 
     @Override
     public void reset() {
-//        if (interfaceOnly == true) {
-//            modify = false;
-//        }
-//        interfaceOnly = true;
-//        interfaceOnlyButton.setSelected(true);
-//        interfaceOnlyButton.setSelected(false);
+        if (modify) {
+            boolean interfaceOnly = EasyMockSetting.getInstance().isInterfaceOnly();
+            interfaceOnlyButton.setSelected(interfaceOnly);
+            normal.setSelected(!interfaceOnly);
+            modify = false;
+        }
     }
 }
