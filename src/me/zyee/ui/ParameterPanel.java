@@ -179,8 +179,8 @@ public class ParameterPanel extends JPanel {
                 int index = className.indexOf("<");
                 if (index > 0) {
                     className = className.substring(0, index);
-                    psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
                 }
+                psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
             }
             if (null != psiClass) {
                 classes.add(new CustomPsiClass(psiClass, i));

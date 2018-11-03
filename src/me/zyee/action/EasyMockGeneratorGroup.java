@@ -84,17 +84,7 @@ public class EasyMockGeneratorGroup extends AnAction {
             PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
             importClass((PsiJavaFile) file, imported, easymock);
             importClass((PsiJavaFile) file, imported, control);
-            if (!imported.contains(node.getPsiClass())) {
-                ((PsiJavaFile) file).importClass(node.getPsiClass());
-                imported.add(node.getPsiClass());
-            }
-            importClass((PsiJavaFile) file, imported, node.getPsiClass());
-            for (MethodSelectInfoNode methodNode : node.getMethods().values()) {
-                for (SelectInfoNode infoNode : methodNode.getParamDepNode().values()) {
-                    PsiClass psiClass = infoNode.getPsiClass();
-                    importClass((PsiJavaFile) file, imported, psiClass);
-                }
-            }
+            importNode((PsiJavaFile) file, imported, node);
             CodeStyleManager.getInstance(editor.getProject()).reformat(((PsiJavaFile) file).getImportList());
         }
 
@@ -109,4 +99,16 @@ public class EasyMockGeneratorGroup extends AnAction {
         }
     }
 
+    private void importNode(PsiJavaFile file, Set<PsiClass> contains, SelectInfoNode node) {
+        if (null != node) {
+            PsiClass psiClass = node.getPsiClass();
+            importClass(file, contains, psiClass);
+            for (MethodSelectInfoNode value : node.getMethods().values()) {
+                for (SelectInfoNode selectInfoNode : value.getParamDepNode().values()) {
+                    importNode(file, contains, selectInfoNode);
+                }
+                importNode(file, contains, value.getReturnTypeDepNode());
+            }
+        }
+    }
 }
