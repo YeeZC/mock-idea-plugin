@@ -421,7 +421,6 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     public SelectInfoNode getNode() {
-        node.getContains().clear();
         return node;
     }
 

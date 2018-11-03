@@ -76,26 +76,29 @@ public class EasyMockGeneratorGroup extends AnAction {
                 imported.add(psiClass);
             }
             PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-            if (!imported.contains(easymock)) {
-                ((PsiJavaFile) file).importClass(easymock);
-            }
+            importClass((PsiJavaFile) file, imported, easymock);
             if (!imported.contains(node.getPsiClass())) {
                 ((PsiJavaFile) file).importClass(node.getPsiClass());
                 imported.add(node.getPsiClass());
             }
+            importClass((PsiJavaFile) file, imported, node.getPsiClass());
             for (MethodSelectInfoNode methodNode : node.getMethods().values()) {
                 for (SelectInfoNode infoNode : methodNode.getParamDepNode().values()) {
                     PsiClass psiClass = infoNode.getPsiClass();
-                    if (!imported.contains(psiClass)) {
-                        ((PsiJavaFile) file).importClass(psiClass);
-                    }
-                    ((PsiJavaFile) file).importClass(infoNode.getPsiClass());
+                    importClass((PsiJavaFile) file, imported, psiClass);
                 }
             }
         }
 
         // format code
         CodeStyleManager.getInstance(editor.getProject()).reformat(file);
+    }
+
+    private void importClass(PsiJavaFile file, Set<PsiClass> contains, PsiClass importClass) {
+        if (null != importClass && !contains.contains(importClass)) {
+            file.importClass(importClass);
+            contains.add(importClass);
+        }
     }
 
 }
