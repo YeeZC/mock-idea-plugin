@@ -37,7 +37,7 @@ public abstract class CodePanel extends JPanel {
             List<PsiMethod> methods = list.getSelectedValuesList();
             node.getContains().clear();
             node.calculateMethodSelected(methods);
-            textPane.setText(node.getCode());
+            textPane.setText(node.getPreview());
         }));
 
         JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(list);
@@ -64,7 +64,7 @@ public abstract class CodePanel extends JPanel {
                     if (null != methodSelectInfoNode) {
                         node.addMethodSelectInfoNode(psiMethod, methodSelectInfoNode);
                         node.getContains().clear();
-                        getTextPane().setText(node.getCode());
+                        getTextPane().setText(node.getPreview());
                     }
                     return true;
                 }
@@ -86,7 +86,7 @@ public abstract class CodePanel extends JPanel {
         node.setContains(new HashSet<>());
         PsiMethod[] methods = psiClass.getMethods();
         list.addElements(methods);
-        textPane.setText(node.getCode());
+        textPane.setText(node.getPreview());
     }
 
     protected abstract PsiClass getPsiClass();

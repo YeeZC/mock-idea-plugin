@@ -78,7 +78,7 @@ public class SelectInfoNode implements CodeInfoNode {
     public String getCode() {
         String className = psiClass.getName();
         contains.add(getMockBeanName());
-        String text = String.format("%s %s = EasyMock.createMock(%s.class);\n", className, mockBeanName, className);
+        String text = String.format("%s %s = control.createMock(%s.class);\n", className, mockBeanName, className);
         StringBuffer buffer = new StringBuffer(text);
         if (!methods.isEmpty()) {
             for (MethodSelectInfoNode value : methods.values()) {
@@ -100,7 +100,7 @@ public class SelectInfoNode implements CodeInfoNode {
             }
         }
 
-        buffer.append(String.format("EasyMock.replay(%s);\n", mockBeanName));
+//        buffer.append(String.format("EasyMock.replay(%s);\n", mockBeanName));
         return buffer.toString();
     }
 

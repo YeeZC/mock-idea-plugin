@@ -77,6 +77,18 @@ public class ParameterPanel extends JPanel {
 
         parameterList = new PsiElementList<>(false);
         parameterList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        parameterList.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
+            List<CustomPsiClass> psiClasses = parameterList.getSelectedValuesList();
+            for (CustomPsiClass psiClass : psiClasses) {
+                if (psiClass.isInterface()) {
+                    SelectInfoNode info = new SelectInfoNode(psiClass);
+                    info.setContains(new HashSet<>());
+                    node.setContains(new HashSet<>());
+                    node.addParamNode(psiClass.getOrder(), info);
+                }
+            }
+            textPane.setText(node.getPreview());
+        }));
         JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(parameterList);
         listScrollPane.setPreferredSize(JBUI.size(500, 100));
         tabbedPane.addTab("Parameter", listScrollPane);
@@ -88,7 +100,7 @@ public class ParameterPanel extends JPanel {
             returnTypeNode.setContains(new HashSet<>());
             node.setContains(new HashSet<>());
             node.setReturnTypeDepNode(returnTypeNode);
-            textPane.setText(node.getCode());
+            textPane.setText(node.getPreview());
         }));
         node = new MethodSelectInfoNode(beanName);
         node.setMethod(method);
@@ -118,7 +130,7 @@ public class ParameterPanel extends JPanel {
                         if (null != info) {
                             node.addParamNode(psiClass.getOrder(), info);
                             node.setContains(contains);
-                            textPane.setText(node.getCode());
+                            textPane.setText(node.getPreview());
                         }
 
                     }
@@ -142,7 +154,7 @@ public class ParameterPanel extends JPanel {
                         returnTypeNode.addMethodSelectInfoNode(psiMethod, methodNode);
                         node.setReturnTypeDepNode(returnTypeNode);
                     }
-                    textPane.setText(node.getCode());
+                    textPane.setText(node.getPreview());
                     return true;
                 }
                 return false;

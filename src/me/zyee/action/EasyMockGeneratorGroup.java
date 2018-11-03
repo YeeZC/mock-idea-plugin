@@ -47,7 +47,7 @@ public class EasyMockGeneratorGroup extends AnAction {
         PsiFile file = e.getData(LangDataKeys.PSI_FILE);
         node = dialog.getNode();
         String code;
-        if (null != node && null != (code = node.getCode())) {
+        if (null != node && null != (code = node.getPreview())) {
             WriteAction.run(() ->
                     CommandProcessor.getInstance().executeCommand(
                             editor.getProject(),
@@ -81,7 +81,9 @@ public class EasyMockGeneratorGroup extends AnAction {
                 imported.add(psiClass);
             }
             PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+            PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
             importClass((PsiJavaFile) file, imported, easymock);
+            importClass((PsiJavaFile) file, imported, control);
             if (!imported.contains(node.getPsiClass())) {
                 ((PsiJavaFile) file).importClass(node.getPsiClass());
                 imported.add(node.getPsiClass());
