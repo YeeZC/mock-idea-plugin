@@ -14,12 +14,15 @@ import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
 import me.zyee.ui.GeneratorDlg;
@@ -64,6 +67,8 @@ public class EasyMockGeneratorGroup extends AnAction {
         Document document = editor.getDocument();
         document.replaceString(caretOffset, caretOffset, value);
         int offset = caretOffset + value.length();
+        PsiElement element = file.findElementAt(caretOffset);
+        PsiMethod method = PsiTreeUtil.getParentOfType(element, PsiMethod.class, false);
         editor.getCaretModel().moveToOffset(offset);
         PsiDocumentManager manager = PsiDocumentManager.getInstance(editor.getProject());
         manager.commitDocument(document);
@@ -88,10 +93,11 @@ public class EasyMockGeneratorGroup extends AnAction {
                     importClass((PsiJavaFile) file, imported, psiClass);
                 }
             }
+            CodeStyleManager.getInstance(editor.getProject()).reformat(((PsiJavaFile) file).getImportList());
         }
 
         // format code
-        CodeStyleManager.getInstance(editor.getProject()).reformat(file);
+        CodeStyleManager.getInstance(editor.getProject()).reformat(method);
     }
 
     private void importClass(PsiJavaFile file, Set<PsiClass> contains, PsiClass importClass) {

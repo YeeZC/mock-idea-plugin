@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -52,6 +53,7 @@ public class ParameterDlg extends DialogWrapper {
     }
 
     public MethodSelectInfoNode getNode() {
+        node.setContains(new HashSet<>());
         return node;
     }
 

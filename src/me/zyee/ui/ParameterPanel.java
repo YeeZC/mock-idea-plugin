@@ -5,10 +5,14 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.PsiTypeElement;
+import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.TabbedPaneWrapper;
@@ -25,8 +29,10 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,26 +50,43 @@ public class ParameterPanel extends JPanel {
     private MethodSelectInfoNode node;
     private SelectInfoNode returnTypeNode;
     private Set<String> contains;
+    private Map<String, PsiClass> typeMap = new HashMap<>();
 
     public ParameterPanel(String beanName, Project project, PsiMethod method, Disposable disposable) {
         this.project = project;
         this.method = method;
         setLayout(new VerticalFlowLayout());
         tabbedPane = new TabbedPaneWrapper(disposable);
-        String className = method.getReturnType().getCanonicalText();
-        returnTypeClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.projectScope(project));
+        PsiClass parent = PsiTreeUtil.getParentOfType(method, PsiClass.class, false);
+        for (PsiTypeParameter typeParameter : parent.getTypeParameterList().getTypeParameters()) {
+            String paramType = typeParameter.getName();
+            PsiClassType[] types = typeParameter.getExtendsListTypes();
+            if (null != types && types.length > 0) {
+                typeMap.put(paramType, types[0].resolve());
+            }
+        }
+        PsiTypeElement type = method.getReturnTypeElement();
+        if (null != type) {
+            if (typeMap.get(type.getText()) == null) {
+                String className = type.getType().getCanonicalText();
+                returnTypeClass = JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.projectScope(project));
+            } else {
+                returnTypeClass = typeMap.get(type.getText());
+            }
+        }
+
         parameterList = new PsiElementList<>(false);
         parameterList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(parameterList);
         listScrollPane.setPreferredSize(JBUI.size(500, 100));
         tabbedPane.addTab("Parameter", listScrollPane);
-
         returnType = new PsiElementList<>();
         returnType.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         returnType.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
             List<PsiMethod> methods = returnType.getSelectedValuesList();
             returnTypeNode.calculateMethodSelected(methods);
-            returnTypeNode.setContains(contains == null ? new HashSet<>() : contains);
+            returnTypeNode.setContains(new HashSet<>());
+            node.setContains(new HashSet<>());
             node.setReturnTypeDepNode(returnTypeNode);
             textPane.setText(node.getCode());
         }));
@@ -129,6 +152,7 @@ public class ParameterPanel extends JPanel {
 
     public void setContains(Set<String> contains) {
         this.contains = contains;
+
     }
 
     public void loadData() {
@@ -136,12 +160,16 @@ public class ParameterPanel extends JPanel {
         List<CustomPsiClass> classes = new ArrayList<>();
         for (int i = 0; i < parameters.length; i++) {
             PsiParameter parameter = parameters[i];
-            String className = parameter.getType().getCanonicalText();
-            int index = className.indexOf("<");
-            if (index > 0) {
-                className = className.substring(0, index);
+            String type = parameter.getTypeElement().getText();
+            PsiClass psiClass = null;
+            if ((psiClass = typeMap.get(type)) == null) {
+                String className = parameter.getType().getCanonicalText();
+                int index = className.indexOf("<");
+                if (index > 0) {
+                    className = className.substring(0, index);
+                    psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
+                }
             }
-            PsiClass psiClass = PsiType.getTypeByName(className, project, GlobalSearchScope.allScope(project)).resolve();
             if (null != psiClass) {
                 classes.add(new CustomPsiClass(psiClass, i));
             }

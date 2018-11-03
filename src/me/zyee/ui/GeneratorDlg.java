@@ -53,6 +53,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.BorderLayout;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -421,6 +422,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     public SelectInfoNode getNode() {
+        node.setContains(new HashSet<>());
         return node;
     }
 

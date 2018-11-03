@@ -60,6 +60,7 @@ public class SelectInfoNode implements CodeInfoNode {
         for (PsiMethod method : methods) {
             if (!tempMethods.containsKey(method)) {
                 MethodSelectInfoNode node = new MethodSelectInfoNode(mockBeanName);
+                node.setContains(contains);
                 node.setMethod(method);
                 tempMethods.put(method, node);
             }
