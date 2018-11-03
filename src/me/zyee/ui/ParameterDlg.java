@@ -53,7 +53,9 @@ public class ParameterDlg extends DialogWrapper {
     }
 
     public MethodSelectInfoNode getNode() {
-        node.setContains(new HashSet<>());
+        if (null != node) {
+            node.setContains(new HashSet<>());
+        }
         return node;
     }
 
