@@ -17,13 +17,13 @@ import javax.swing.JPanel;
  * @author yee
  * @date 2018/11/1
  */
-public class CodeDialog extends DialogWrapper {
+public class CodeDlg extends DialogWrapper {
     private PsiClass psiClass;
     private SelectInfoNode info;
     private CodePanel codePanel;
     private Project project;
 
-    public CodeDialog(@Nullable Project project, PsiClass psiClass) {
+    public CodeDlg(@Nullable Project project, PsiClass psiClass) {
         super(project, false);
         this.psiClass = psiClass;
         this.project = project;

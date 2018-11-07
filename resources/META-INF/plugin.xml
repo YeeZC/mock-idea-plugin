@@ -33,10 +33,14 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="me.zyee.easymock.generator" class="me.zyee.action.EasyMockGeneratorGroup" text="EasyMockGenerator"
-            description="EasyMockGenerator">
-        <add-to-group group-id="GenerateGroup" anchor="last"/>
+      <action id="me.zyee.easymock.generator" class="me.zyee.action.EasyMockGeneratorGroup" text="EasyMock Object"
+              description="EasyMock Object">
+          <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
     </action>
+      <action id="me.zyee.easymock.testcase" class="me.zyee.action.EasyMockTestCaseGenerator"
+              text="EasyMock TestCase" description="EasyMock TestCase">
+          <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
+      </action>
   </actions>
 
 </idea-plugin>

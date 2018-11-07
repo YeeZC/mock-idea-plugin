@@ -2,6 +2,7 @@ package me.zyee;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class SelectInfoNode implements CodeInfoNode {
     private String mockBeanName;
     private String baseName;
 
-    public SelectInfoNode(PsiClass psiClass) {
+    public SelectInfoNode(@NotNull PsiClass psiClass) {
         this.psiClass = psiClass;
         mockBeanName = "mock" + psiClass.getName();
         baseName = mockBeanName;

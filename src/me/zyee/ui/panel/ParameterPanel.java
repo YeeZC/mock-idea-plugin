@@ -22,7 +22,7 @@ import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
 import me.zyee.config.EasyMockSetting;
 import me.zyee.ui.PsiElementList;
-import me.zyee.ui.dialog.CodeDialog;
+import me.zyee.ui.dialog.CodeDlg;
 import me.zyee.ui.dialog.ParameterDlg;
 
 import javax.swing.JLabel;
@@ -128,9 +128,9 @@ public class ParameterPanel extends JPanel {
                 if (index >= 0) {
                     CustomPsiClass psiClass = parameterList.getModel().getElementAt(index);
                     if (!EasyMockSetting.getInstance().isInterfaceOnly() || psiClass.isInterface()) {
-                        CodeDialog codeDialog = new CodeDialog(project, psiClass);
-                        codeDialog.show();
-                        SelectInfoNode info = codeDialog.getInfo();
+                        CodeDlg codeDlg = new CodeDlg(project, psiClass);
+                        codeDlg.show();
+                        SelectInfoNode info = codeDlg.getInfo();
                         if (null != info) {
                             node.addParamNode(psiClass.getOrder(), info);
                             node.setContains(contains);

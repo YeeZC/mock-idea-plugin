@@ -96,4 +96,5 @@ public abstract class CodePanel extends JPanel {
     public SelectInfoNode getNode() {
         return node;
     }
+
 }
