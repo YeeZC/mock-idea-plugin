@@ -1,4 +1,4 @@
-package me.zyee.ui;
+package me.zyee.ui.panel;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
@@ -21,6 +21,9 @@ import me.zyee.CustomPsiClass;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
 import me.zyee.config.EasyMockSetting;
+import me.zyee.ui.PsiElementList;
+import me.zyee.ui.dialog.CodeDialog;
+import me.zyee.ui.dialog.ParameterDlg;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,7 +56,7 @@ public class ParameterPanel extends JPanel {
     private Set<String> contains;
     private Map<String, PsiClass> typeMap = new HashMap<>();
 
-    public ParameterPanel(String beanName, Project project, PsiMethod method, Disposable disposable) {
+    ParameterPanel(String beanName, Project project, PsiMethod method, Disposable disposable) {
         this.project = project;
         this.method = method;
         setLayout(new VerticalFlowLayout());

@@ -1,4 +1,4 @@
-package me.zyee.ui;
+package me.zyee.ui.panel;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -9,6 +9,8 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.util.ui.JBUI;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
+import me.zyee.ui.PsiElementList;
+import me.zyee.ui.dialog.ParameterDlg;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -29,7 +31,7 @@ public abstract class CodePanel extends JPanel {
     private JTextArea textPane;
     private SelectInfoNode node;
 
-    public CodePanel(Project project, String label) {
+    CodePanel(Project project, String label) {
         setLayout(new VerticalFlowLayout());
         list = new PsiElementList<>();
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);

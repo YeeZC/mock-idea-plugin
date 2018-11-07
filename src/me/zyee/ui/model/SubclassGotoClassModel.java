@@ -6,7 +6,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiNamedElement;
 import com.intellij.util.Processor;
 import me.zyee.ui.BaseClassInheritorsProvider;
-import me.zyee.ui.GeneratorDlg;
+import me.zyee.ui.dialog.GeneratorDlg;
 import org.jetbrains.annotations.NotNull;
 
 /**

@@ -7,7 +7,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.util.ArrayUtil;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.indexing.FindSymbolParameters;
-import me.zyee.ui.GeneratorDlg;
+import me.zyee.ui.dialog.GeneratorDlg;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * @author yee
  * @date 2018/11/2
  */
-class JavaInheritorsProvider extends BaseClassInheritorsProvider {
+public class JavaInheritorsProvider extends BaseClassInheritorsProvider {
     private final Project myProject;
 
     public JavaInheritorsProvider(Project project, PsiClass baseClass, GlobalSearchScope scope) {

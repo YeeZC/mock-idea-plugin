@@ -1,11 +1,10 @@
-package me.zyee.ui;
+package me.zyee.ui.dialog;
 
 import com.intellij.ide.IdeBundle;
 import com.intellij.ide.projectView.BaseProjectTreeBuilder;
 import com.intellij.ide.projectView.impl.ProjectAbstractTreeStructureBase;
 import com.intellij.ide.projectView.impl.ProjectTreeBuilder;
 import com.intellij.ide.projectView.impl.nodes.ClassTreeNode;
-import com.intellij.ide.util.ClassFilter;
 import com.intellij.ide.util.TreeClassChooser;
 import com.intellij.ide.util.gotoByName.ChooseByNameModel;
 import com.intellij.ide.util.gotoByName.ChooseByNamePanel;
@@ -15,7 +14,6 @@ import com.intellij.ide.util.treeView.AlphaComparator;
 import com.intellij.ide.util.treeView.NodeRenderer;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -42,8 +40,12 @@ import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
 import me.zyee.SelectInfoNode;
 import me.zyee.config.EasyMockSetting;
+import me.zyee.ui.BaseClassInheritorsProvider;
+import me.zyee.ui.JavaInheritorsProvider;
 import me.zyee.ui.model.MyGotoClassModel;
 import me.zyee.ui.model.SubclassGotoClassModel;
+import me.zyee.ui.panel.CodePanel;
+import me.zyee.ui.panel.PanelBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -125,11 +127,6 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
         return element -> !EasyMockSetting.getInstance().isInterfaceOnly() || element.isInterface();
     }
 
-    @Nullable
-    private static Filter<PsiClass> createFilter(@Nullable final ClassFilter classFilter) {
-        return classFilter == null ? null : element -> ReadAction.compute(() -> classFilter.isAccepted(element));
-    }
-
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
@@ -195,12 +192,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private JPanel createMethodListPanel() {
-        codePanel = new CodePanel(getProject(), "Method:") {
-            @Override
-            protected PsiClass getPsiClass() {
-                return calcSelectedClass();
-            }
-        };
+        codePanel = PanelBuilder.buildCodePanel(getProject(), calcSelectedClass(), "Method: ");
         return codePanel;
     }
 

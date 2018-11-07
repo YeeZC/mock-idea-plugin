@@ -1,10 +1,12 @@
-package me.zyee.ui;
+package me.zyee.ui.dialog;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiMethod;
 import me.zyee.MethodSelectInfoNode;
+import me.zyee.ui.panel.PanelBuilder;
+import me.zyee.ui.panel.ParameterPanel;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
@@ -25,7 +27,7 @@ public class ParameterDlg extends DialogWrapper {
     private MethodSelectInfoNode node;
     private Set<String> contains;
 
-    protected ParameterDlg(String beanName, @Nullable Project project, PsiMethod method) {
+    public ParameterDlg(String beanName, @Nullable Project project, PsiMethod method) {
         super(project, true);
         this.project = project;
         this.method = method;
@@ -45,7 +47,7 @@ public class ParameterDlg extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        parameterPanel = new ParameterPanel(beanName, project, method, getDisposable());
+        parameterPanel = PanelBuilder.buildParamPanel(beanName, project, method, getDisposable());
         parameterPanel.setContains(contains);
         parameterPanel.loadData();
         panel.add(parameterPanel);

@@ -2,7 +2,7 @@ package me.zyee;
 
 import com.intellij.ide.projectView.impl.AbstractProjectTreeStructure;
 import com.intellij.openapi.project.Project;
-import me.zyee.ui.GeneratorDlg;
+import me.zyee.ui.dialog.GeneratorDlg;
 
 /**
  * @author yee

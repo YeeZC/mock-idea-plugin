@@ -25,7 +25,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
-import me.zyee.ui.GeneratorDlg;
+import me.zyee.ui.dialog.GeneratorDlg;
 
 import java.util.HashSet;
 import java.util.Set;
