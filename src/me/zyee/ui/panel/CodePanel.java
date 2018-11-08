@@ -87,7 +87,7 @@ public abstract class CodePanel extends JPanel {
         node = new SelectInfoNode(psiClass);
         node.setContains(new HashSet<>());
         PsiMethod[] methods = psiClass.getMethods();
-        list.addElements(methods);
+        list.setElement(methods);
         textPane.setText(node.getPreview());
     }
 

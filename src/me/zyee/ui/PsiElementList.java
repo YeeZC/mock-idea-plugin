@@ -34,11 +34,11 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
         this(true);
     }
 
-    public void addElements(T[] elements) {
+    public void setElement(T[] elements) {
         model.setData(elements);
     }
 
-    public void addElements(Collection<T> elements) {
+    public void setElement(Collection<T> elements) {
         model.setData(elements);
     }
 

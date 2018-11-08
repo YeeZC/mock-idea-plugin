@@ -190,10 +190,10 @@ public class ParameterPanel extends JPanel {
                 classes.add(new CustomPsiClass(psiClass, i));
             }
         }
-        parameterList.addElements(classes);
+        parameterList.setElement(classes);
         if (null != returnTypeClass) {
             returnTypeNode = new SelectInfoNode(returnTypeClass);
-            returnType.addElements(returnTypeClass.getMethods());
+            returnType.setElement(returnTypeClass.getMethods());
         }
     }
 
