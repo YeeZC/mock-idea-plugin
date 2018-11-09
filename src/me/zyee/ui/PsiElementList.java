@@ -18,15 +18,13 @@ import java.util.List;
  */
 public class PsiElementList<T extends PsiElement> extends JBList<T> {
     private final Comparator<T> comparator = (el0, el1) -> el0.getText().compareToIgnoreCase(el1.getText());
-    private DataChangeProvider model;
 
     public PsiElementList(boolean sort) {
         if (sort) {
-            model = new ListModel();
+            this.setModel(new ListModel());
         } else {
-            model = new ListModelNotSort();
+            this.setModel(new ListModelNotSort());
         }
-        this.setModel(model);
         this.setCellRenderer(new DefaultPsiElementCellRenderer());
     }
 
@@ -35,22 +33,15 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
     }
 
     public void setElement(T[] elements) {
-        model.setData(elements);
+        ((DataChangedProvider) getModel()).setData(elements);
     }
 
     public void setElement(Collection<T> elements) {
-        model.setData(elements);
+        ((DataChangedProvider) getModel()).setData(elements);
     }
 
 
-    private interface DataChangeProvider<T> extends javax.swing.ListModel<T> {
-        void setData(Collection<T> items);
-
-        void setData(T[] items);
-    }
-
-
-    private class ListModel extends SortedListModel<T> implements DataChangeProvider<T> {
+    private class ListModel extends SortedListModel<T> implements DataChangedProvider<T> {
 
         public ListModel() {
             super(comparator);
@@ -71,7 +62,7 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
         }
     }
 
-    private class ListModelNotSort extends AbstractListModel<T> implements DataChangeProvider<T> {
+    private class ListModelNotSort extends AbstractListModel<T> implements DataChangedProvider<T> {
         private List<T> items;
 
         public ListModelNotSort() {
