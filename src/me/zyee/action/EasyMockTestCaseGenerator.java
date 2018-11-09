@@ -33,6 +33,9 @@ public class EasyMockTestCaseGenerator extends AnAction {
             PsiDirectory directory = file.getParent();
             Editor editor = e.getData(CommonDataKeys.EDITOR);
             PsiClass psiClass = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiClass.class);
+            if (null == psiClass) {
+                return;
+            }
             TestCaseDlg dlg = new TestCaseDlg(e.getData(LangDataKeys.MODULE), calPsiClass(psiClass), directoryService.getPackage(directory));
             dlg.show();
             PsiClass result = dlg.get();
@@ -40,7 +43,7 @@ public class EasyMockTestCaseGenerator extends AnAction {
     }
 
     @NotNull
-    private PsiClass calPsiClass(PsiClass psiClass) {
+    private PsiClass calPsiClass(@NotNull PsiClass psiClass) {
         if (psiClass instanceof PsiAnonymousClass) {
             psiClass = calPsiClass(psiClass.getSuperClass());
         }

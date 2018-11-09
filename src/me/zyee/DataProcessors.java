@@ -6,15 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author yee
  * @date 2018/11/9
  */
 public class DataProcessors {
-    public static <T> Processor<T> uniqueCheckProcessor(Collection<T> collection, Accessor<T> accessor) {
-        return new UniqueCheckProcessor<>(collection, accessor);
+    public static <T> Processor<T> checkProcessor(Collection<T> collection, Accessor<T> accessor) {
+        return new CheckProcessor<>(collection, accessor);
     }
 
     public interface Accessor<T> {
@@ -24,28 +23,30 @@ public class DataProcessors {
         boolean access(T element);
     }
 
-    private static class UniqueCheckProcessor<T> implements Processor<T> {
+    private static class CheckProcessor<T> implements Processor<T> {
 
-        private Set<T> set;
+        private Collection<T> set;
         private Accessor<T> accessor;
 
-        public UniqueCheckProcessor(@Nullable Collection<T> collection, @NotNull Accessor<T> accessor) {
-            this.set = new HashSet<>();
+        public CheckProcessor(@Nullable Collection<T> collection, @NotNull Accessor<T> accessor) {
+
             if (null != collection) {
-                set.addAll(collection);
+                this.set = collection;
+            } else {
+                this.set = new HashSet<>();
             }
             this.accessor = accessor;
         }
 
-        public UniqueCheckProcessor(Collection<T> collection) {
+        public CheckProcessor(Collection<T> collection) {
             this(collection, Accessor.TRUE);
         }
 
-        public UniqueCheckProcessor(Accessor<T> accessor) {
+        public CheckProcessor(Accessor<T> accessor) {
             this(null, accessor);
         }
 
-        public UniqueCheckProcessor() {
+        public CheckProcessor() {
             this(Accessor.TRUE);
         }
 

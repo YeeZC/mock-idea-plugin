@@ -1,6 +1,5 @@
 package me.zyee.ui.dialog;
 
-import com.intellij.concurrency.AsyncFuture;
 import com.intellij.ide.util.PackageChooserDialog;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -30,6 +29,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +48,7 @@ public class TestCaseDlg extends DialogWrapper implements PsiClassGetter {
 
     public TestCaseDlg(@Nullable Module module, @NotNull PsiClass psiClass, PsiPackage defaultPackage) {
         super(module.getProject(), true);
+        this.setTitle("Generate TestCase");
         this.basePsiClass = psiClass;
         this.module = module;
         this.selectedPackage = defaultPackage;
@@ -59,7 +60,7 @@ public class TestCaseDlg extends DialogWrapper implements PsiClassGetter {
     protected JComponent createCenterPanel() {
         List<PsiClass> classes = new ArrayList<>();
         classes.add(basePsiClass);
-        AsyncFuture<Boolean> future = ClassInheritorsSearch.search(basePsiClass).forEachAsync(DataProcessors.uniqueCheckProcessor(classes, element -> !(element instanceof PsiAnonymousClass)));
+        Future<Boolean> future = ClassInheritorsSearch.search(basePsiClass).forEachAsync(DataProcessors.checkProcessor(classes, element -> !(element instanceof PsiAnonymousClass)));
         mockFields = new PsiElementList<>();
         mockFields.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         inheritor = new PsiElementComboBox<>();
