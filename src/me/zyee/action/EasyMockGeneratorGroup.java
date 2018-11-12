@@ -3,7 +3,6 @@ package me.zyee.action;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
-import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.command.CommandProcessor;
@@ -12,6 +11,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.MessageDialogBuilder;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -40,22 +40,30 @@ public class EasyMockGeneratorGroup extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent e) {
         Project project = getEventProject(e);
-        GeneratorDlg dialog = new GeneratorDlg("", project);
-        dialog.showDialog();
-        DataContext dataContext = e.getDataContext();
-        Editor editor = CommonDataKeys.EDITOR.getData(dataContext);
-        PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-        node = dialog.getNode();
-        String code;
-        if (null != node && null != (code = node.getPreview())) {
-            WriteAction.run(() ->
-                    CommandProcessor.getInstance().executeCommand(
-                            editor.getProject(),
-                            () -> replace(editor, code, file),
-                            null,
-                            null,
-                            UndoConfirmationPolicy.DEFAULT,
-                            editor.getDocument()));
+
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
+        if (null != editor) {
+            Document document = editor.getDocument();
+            if (!document.isWritable()) {
+                MessageDialogBuilder.YesNo dlg = MessageDialogBuilder.yesNo("ReadOnly File", "Attempt to modify read-only document");
+                dlg.show();
+                return;
+            }
+            GeneratorDlg dialog = new GeneratorDlg("", project);
+            dialog.showDialog();
+            PsiFile file = e.getData(LangDataKeys.PSI_FILE);
+            node = dialog.getNode();
+            String code;
+            if (null != node && null != (code = node.getPreview())) {
+                WriteAction.run(() ->
+                        CommandProcessor.getInstance().executeCommand(
+                                editor.getProject(),
+                                () -> replace(editor, code, file),
+                                null,
+                                null,
+                                UndoConfirmationPolicy.DEFAULT,
+                                editor.getDocument()));
+            }
         }
     }
 
