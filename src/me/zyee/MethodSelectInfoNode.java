@@ -3,6 +3,8 @@ package me.zyee;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +56,15 @@ public class MethodSelectInfoNode implements CodeInfoNode {
 
     @Override
     public String getCode() {
+        if (method.getReturnType() == PsiType.VOID){
+            return getVoidCode();
+        } else {
+            return getObjectCode();
+        }
+    }
+
+    @NotNull
+    private String getObjectCode() {
         StringBuffer paramBuilder = new StringBuffer();
         StringBuffer returnTypeBuilder = new StringBuffer();
         StringBuffer buffer = new StringBuffer();
@@ -70,18 +81,38 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         buffer.setCharAt(buffer.length() - 1, ')');
         buffer.append(")");
         PsiElement type = method.getReturnTypeElement();
-        if (null != type && !"void".equals(type.getText())) {
-            String mockBeanName = "mock" + type.getText();
-            int index = mockBeanName.indexOf("<");
-            if (index >= 0) {
-                mockBeanName = mockBeanName.substring(0, index);
-            }
-            mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
-            buffer.append(String.format(".andReturn(%s).anyTimes()", mockBeanName));
+        String mockBeanName = "mock" + type.getText();
+        int index = mockBeanName.indexOf("<");
+        if (index >= 0) {
+            mockBeanName = mockBeanName.substring(0, index);
         }
+        mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
+        buffer.append(String.format(".andReturn(%s).anyTimes()", mockBeanName));
         buffer.append(";\n");
         paramBuilder.append(returnTypeBuilder).append(buffer);
         return paramBuilder.toString();
+    }
+
+    @NotNull
+    private String getVoidCode() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(String.format("%s.%s(", callBeanName, method.getName()));
+        PsiParameter[] parameters = method.getParameterList().getParameters();
+        if (parameters.length > 0) {
+            for (int i = 0; i < parameters.length; i++) {
+                buffer.append("EasyMock.anyObject(), ");
+            }
+            buffer.delete(buffer.length() - 2, buffer.length());
+        }
+        buffer.append(")");
+        buffer.append(";\n");
+        buffer.append("EasyMock.expectLastCall().andAnswer(new IAnswer<Object>() {\n");
+        buffer.append("@Override\n");
+        buffer.append("public Object answer() throws Throwable {\n");
+        buffer.append("return null;\n");
+        buffer.append("}\n");
+        buffer.append("}).anyTimes();\n");
+        return buffer.toString();
     }
 
     private String calculateBeanName(String paramName, StringBuffer buffer, SelectInfoNode node) {
