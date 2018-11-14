@@ -14,5 +14,5 @@ public interface CodeFormat {
 
     String replay();
 
-    String start();
+    String start(String... args);
 }

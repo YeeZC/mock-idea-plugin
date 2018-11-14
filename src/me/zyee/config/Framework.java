@@ -41,12 +41,8 @@ public enum Framework implements UIItem, CodeFormat {
         }
 
         @Override
-        public String start() {
-            if (!MockSetting.getInstance().isStaticMock()) {
-                return "IMocksControl control = EasyMock.createControl();\n";
-            } else {
-                return "";
-            }
+        public String start(String... args) {
+            return "IMocksControl control = EasyMock.createControl();\n";
         }
     }, MOCKITO("Mockito") {
         @Override
@@ -80,7 +76,7 @@ public enum Framework implements UIItem, CodeFormat {
         }
 
         @Override
-        public String start() {
+        public String start(String... args) {
             return null;
         }
     }, POWER_EASYMOCK("PowerEasy") {
@@ -115,7 +111,7 @@ public enum Framework implements UIItem, CodeFormat {
         }
 
         @Override
-        public String start() {
+        public String start(String... args) {
             return null;
         }
     }, POWER_MOCKITO("PowerMockito") {
@@ -150,7 +146,7 @@ public enum Framework implements UIItem, CodeFormat {
         }
 
         @Override
-        public String start() {
+        public String start(String... args) {
             return null;
         }
     };
