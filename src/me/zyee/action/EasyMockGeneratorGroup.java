@@ -13,6 +13,7 @@ import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageDialogBuilder;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -49,9 +50,16 @@ public class EasyMockGeneratorGroup extends AnAction {
                 dlg.show();
                 return;
             }
+
+            PsiFile file = e.getData(LangDataKeys.PSI_FILE);
+            PsiCodeBlock codeBlock = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiCodeBlock.class);
+            if (null == codeBlock) {
+                MessageDialogBuilder.YesNo dlg = MessageDialogBuilder.yesNo("Code Block", "Generate code out of code block is not supported");
+                dlg.show();
+                return;
+            }
             GeneratorDlg dialog = new GeneratorDlg("", project);
             dialog.showDialog();
-            PsiFile file = e.getData(LangDataKeys.PSI_FILE);
             node = dialog.getNode();
             String code;
             if (null != node && null != (code = node.getPreview())) {
