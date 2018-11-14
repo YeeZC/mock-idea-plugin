@@ -36,7 +36,14 @@ public class EasyMockSetting implements PersistentStateComponent<Element> {
     }
 
     public Boolean isStaticMock() {
-        return !interfaceOnly && staticMock;
+        switch (framework) {
+            case EASYMOCK:
+                return !interfaceOnly && staticMock;
+            case MOCKITO:
+                return staticMock;
+            default:
+                return false;
+        }
     }
 
     public void setStaticMock(Boolean staticMock) {
