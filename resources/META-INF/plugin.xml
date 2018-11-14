@@ -26,9 +26,9 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-      <applicationConfigurable instance="me.zyee.config.EasyMockConfiguration"/>
-      <applicationService serviceInterface="me.zyee.config.EasyMockSetting"
-                          serviceImplementation="me.zyee.config.EasyMockSetting"/>
+      <applicationConfigurable instance="me.zyee.config.MockConfiguration"/>
+      <applicationService serviceInterface="me.zyee.config.MockSetting"
+                          serviceImplementation="me.zyee.config.MockSetting"/>
   </extensions>
 
   <actions>

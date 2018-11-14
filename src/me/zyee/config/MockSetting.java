@@ -4,6 +4,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import me.zyee.format.CodeFormat;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,16 +16,16 @@ import org.jetbrains.annotations.Nullable;
 @State(
         name = "MockSetting",
         storages = {@Storage(
-                file = "$APP_CONFIG$/EasyMockSetting.xml"
+                file = "$APP_CONFIG$/MockSetting.xml"
         )}
 )
-public class EasyMockSetting implements PersistentStateComponent<Element> {
+public class MockSetting implements PersistentStateComponent<Element> {
     private Boolean interfaceOnly = true;
     private Boolean staticMock = true;
     private Framework framework = Framework.EASYMOCK;
 
-    public static EasyMockSetting getInstance() {
-        return ServiceManager.getService(EasyMockSetting.class);
+    public static MockSetting getInstance() {
+        return ServiceManager.getService(MockSetting.class);
     }
 
     public Boolean isInterfaceOnly() {
@@ -52,6 +53,10 @@ public class EasyMockSetting implements PersistentStateComponent<Element> {
 
     public Framework getFramework() {
         return framework;
+    }
+
+    public CodeFormat getCodeFormat() {
+        return getFramework().getCodeFormat(isStaticMock());
     }
 
     public void setFramework(Framework framework) {

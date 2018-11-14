@@ -26,6 +26,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
+import me.zyee.config.MockSetting;
 import me.zyee.ui.dialog.GeneratorDlg;
 
 import java.util.HashSet;
@@ -96,20 +97,20 @@ public class MockGeneratorGroup extends AnAction {
             PsiClass psiClass = PsiType.getTypeByName(statement.getQualifiedName(), editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
             imported.add(psiClass);
         }
-        PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-        PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-        importClass(file, imported, easymock);
-        importClass(file, imported, control);
-        importNode(file, imported, node);
-        PsiClass testCodeClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
-//        testCodeClass.add()
-        PsiClass runWith = PsiType.getTypeByName("org.junit.runner.RunWith", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-        PsiClass powerMockRunner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-        if (null != powerMockRunner) {
-
+        switch (MockSetting.getInstance().getFramework()) {
+            case MOCKITO:
+                break;
+            case EASYMOCK:
+                PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+                PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+                importClass(file, imported, easymock);
+                importClass(file, imported, control);
+                importNode(file, imported, node);
+                break;
+            default:
+                break;
         }
         CodeStyleManager.getInstance(editor.getProject()).reformat(file.getImportList());
-
         // format code
         CodeStyleManager.getInstance(editor.getProject()).reformat(method);
     }

@@ -14,7 +14,8 @@ import com.intellij.util.ui.JBUI;
 import me.zyee.DataProcessors;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
-import me.zyee.config.EasyMockSetting;
+import me.zyee.config.Framework;
+import me.zyee.config.MockSetting;
 import me.zyee.ui.PsiElementList;
 import me.zyee.ui.dialog.ParameterDlg;
 
@@ -27,6 +28,7 @@ import javax.swing.SwingUtilities;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
+
 
 /**
  * @author yee
@@ -65,7 +67,7 @@ public abstract class CodePanel extends JPanel {
 //            textPane.setText(node.getPreview());
         }));
         fieldsPanel = ScrollPaneFactory.createScrollPane(fieldList);
-        if (!EasyMockSetting.getInstance().isInterfaceOnly()) {
+        if (MockSetting.getInstance().getFramework() != Framework.EASYMOCK) {
             tabbedPane.addTab("Fields", fieldsPanel);
         }
         add(tabbedPane.getComponent());
@@ -111,7 +113,7 @@ public abstract class CodePanel extends JPanel {
         node.setContains(new HashSet<>());
         PsiMethod[] methods = psiClass.getMethods();
         PsiField[] fields = psiClass.getFields();
-        if (!EasyMockSetting.getInstance().isStaticMock()) {
+        if (!MockSetting.getInstance().isStaticMock()) {
             list.setData(DataProcessors.AccessList.of(methods).execute(element -> {
                 PsiModifierList list = element.getModifierList();
                 return !list.hasModifierProperty("static");

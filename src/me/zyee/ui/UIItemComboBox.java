@@ -3,7 +3,9 @@ package me.zyee.ui;
 
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.SortedComboBoxModel;
+import me.zyee.DataProcessors;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -35,15 +37,13 @@ public class UIItemComboBox<T extends UIItem> extends ComboBox<T> implements Dat
 
         @Override
         public void setData(T[] elements) {
-            this.clear();
-            this.addAll(elements);
-            fireContentsChanged(UIItemComboBox.this, -1, -1);
+            setData(Arrays.asList(elements));
         }
 
         @Override
         public void setData(Collection<T> elements) {
             this.clear();
-            this.addAll(elements);
+            this.addAll(DataProcessors.AccessList.of(elements).execute(item -> item.isAvailable()));
             fireContentsChanged(UIItemComboBox.this, -1, -1);
         }
     }

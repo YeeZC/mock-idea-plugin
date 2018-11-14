@@ -2,6 +2,8 @@ package me.zyee;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
+import me.zyee.config.MockSetting;
+import me.zyee.format.CodeFormat;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -77,9 +79,10 @@ public class SelectInfoNode implements CodeInfoNode {
 
     @Override
     public String getCode() {
+        CodeFormat framework = MockSetting.getInstance().getCodeFormat();
         String className = psiClass.getName();
         contains.add(getMockBeanName());
-        String text = String.format("%s %s = control.createMock(%s.class);\n", className, mockBeanName, className);
+        String text = framework.mockObjectHeadFormat(className, mockBeanName);
         StringBuffer buffer = new StringBuffer(text);
         if (!methods.isEmpty()) {
             for (MethodSelectInfoNode value : methods.values()) {
@@ -101,7 +104,6 @@ public class SelectInfoNode implements CodeInfoNode {
             }
         }
 
-//        buffer.append(String.format("EasyMock.replay(%s);\n", mockBeanName));
         return buffer.toString();
     }
 

@@ -29,7 +29,7 @@ public class DataProcessors {
     }
 
     public interface AccessList<T> extends List<T> {
-        static <T> DataProcessors.AccessList<T> of(List<T> list) {
+        static <T> DataProcessors.AccessList<T> of(Collection<T> list) {
             return new AccessListImpl(list);
         }
 
@@ -82,7 +82,7 @@ public class DataProcessors {
     public static class AccessListImpl<T> implements AccessList<T> {
         private List<T> list;
 
-        private AccessListImpl(List<T> list) {
+        private AccessListImpl(Collection<T> list) {
             this.list = new ArrayList<>(list);
         }
 

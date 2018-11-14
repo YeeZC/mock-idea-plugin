@@ -20,7 +20,7 @@ import com.intellij.util.ui.JBUI;
 import me.zyee.CustomPsiClass;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
-import me.zyee.config.EasyMockSetting;
+import me.zyee.config.MockSetting;
 import me.zyee.ui.PsiElementList;
 import me.zyee.ui.dialog.CodeDlg;
 import me.zyee.ui.dialog.ParameterDlg;
@@ -127,7 +127,7 @@ public class ParameterPanel extends JPanel {
                 int index = parameterList.locationToIndex(event.getPoint());
                 if (index >= 0) {
                     CustomPsiClass psiClass = parameterList.getModel().getElementAt(index);
-                    if (!EasyMockSetting.getInstance().isInterfaceOnly() || psiClass.isInterface()) {
+                    if (!MockSetting.getInstance().isInterfaceOnly() || psiClass.isInterface()) {
                         CodeDlg codeDlg = new CodeDlg(project, psiClass);
                         codeDlg.show();
                         SelectInfoNode info = codeDlg.getInfo();

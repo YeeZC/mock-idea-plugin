@@ -11,6 +11,8 @@ import java.awt.Component;
 public interface UIItem {
     String getDisplay();
 
+    boolean isAvailable();
+
     class UIItemCellRenderer extends DefaultListCellRenderer {
 
         @Override

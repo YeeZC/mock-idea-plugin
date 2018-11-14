@@ -20,7 +20,7 @@ import javax.swing.JSeparator;
  * @author yee
  * @date 2018/11/3
  */
-public class EasyMockConfiguration implements SearchableConfigurable {
+public class MockConfiguration implements SearchableConfigurable {
     private boolean modify = false;
     private boolean interfaceOnly = false;
     private boolean staticMock = true;
@@ -59,7 +59,7 @@ public class EasyMockConfiguration implements SearchableConfigurable {
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(interfaceOnlyButton);
         buttonGroup.add(normal);
-        this.interfaceOnly = EasyMockSetting.getInstance().isInterfaceOnly();
+        this.interfaceOnly = MockSetting.getInstance().isInterfaceOnly();
         interfaceOnlyButton.setSelected(this.interfaceOnly);
         normal.setSelected(!this.interfaceOnly);
         panel.add(interfaceOnlyButton);
@@ -69,7 +69,7 @@ public class EasyMockConfiguration implements SearchableConfigurable {
             staticMockCheckBox.setEnabled(!interfaceOnly);
             modify = true;
         });
-        staticMockCheckBox.setSelected(EasyMockSetting.getInstance().isStaticMock());
+        staticMockCheckBox.setSelected(MockSetting.getInstance().isStaticMock());
         staticMockCheckBox.addChangeListener(e -> {
             staticMock = staticMockCheckBox.isSelected();
             modify = true;
@@ -100,18 +100,19 @@ public class EasyMockConfiguration implements SearchableConfigurable {
 
     @Override
     public void apply() {
-        EasyMockSetting.getInstance().setInterfaceOnly(interfaceOnly);
-        EasyMockSetting.getInstance().setStaticMock(staticMock);
-        EasyMockSetting.getInstance().setFramework(selectedFramework);
+        MockSetting.getInstance().setInterfaceOnly(interfaceOnly);
+        MockSetting.getInstance().setStaticMock(staticMock);
+        MockSetting.getInstance().setFramework(selectedFramework);
     }
 
     @Override
     public void reset() {
         if (modify) {
-            interfaceOnly = EasyMockSetting.getInstance().isInterfaceOnly();
+            interfaceOnly = MockSetting.getInstance().isInterfaceOnly();
             interfaceOnlyButton.setSelected(interfaceOnly);
             normal.setSelected(!interfaceOnly);
-            staticMock = EasyMockSetting.getInstance().isStaticMock();
+            frameworkComboBox.setSelectedItem(MockSetting.getInstance().getFramework());
+            staticMock = MockSetting.getInstance().isStaticMock();
             staticMockCheckBox.setSelected(staticMock);
             modify = false;
         }

@@ -39,7 +39,7 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import me.zyee.GeneratorProjectTreeStructure;
 import me.zyee.SelectInfoNode;
-import me.zyee.config.EasyMockSetting;
+import me.zyee.config.MockSetting;
 import me.zyee.ui.BaseClassInheritorsProvider;
 import me.zyee.ui.JavaInheritorsProvider;
 import me.zyee.ui.model.MyGotoClassModel;
@@ -124,7 +124,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private Filter<PsiClass> allFilter() {
-        return element -> !EasyMockSetting.getInstance().isInterfaceOnly() || element.isInterface();
+        return element -> !MockSetting.getInstance().isInterfaceOnly() || element.isInterface();
     }
 
     @Override
