@@ -1,6 +1,5 @@
 package me.zyee.config;
 
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.ui.components.JBCheckBox;
@@ -29,7 +28,7 @@ public class EasyMockConfiguration implements SearchableConfigurable {
     private JBRadioButton normal = new JBRadioButton("Interfaces & Classes (EaseMock V3+)");
     private JBCheckBox staticMockCheckBox = new JBCheckBox("Mock Static Method (Powered by PowerMock)");
     private UIItemComboBox<Framework> frameworkComboBox;
-    private Framework selectedFramework;
+    private Framework selectedFramework = Framework.EASYMOCK;
 
 
     @NotNull
@@ -100,9 +99,10 @@ public class EasyMockConfiguration implements SearchableConfigurable {
     }
 
     @Override
-    public void apply() throws ConfigurationException {
+    public void apply() {
         EasyMockSetting.getInstance().setInterfaceOnly(interfaceOnly);
         EasyMockSetting.getInstance().setStaticMock(staticMock);
+        EasyMockSetting.getInstance().setFramework(selectedFramework);
     }
 
     @Override
