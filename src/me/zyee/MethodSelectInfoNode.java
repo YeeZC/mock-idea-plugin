@@ -1,9 +1,11 @@
 package me.zyee;
 
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -69,7 +71,12 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         StringBuffer returnTypeBuilder = new StringBuffer();
         StringBuffer buffer = new StringBuffer();
         PsiParameter[] parameters = method.getParameterList().getParameters();
-        buffer.append(String.format("EasyMock.expect(%s.%s( ", callBeanName, method.getName()));
+        if (method.getModifierList().hasModifierProperty("static")) {
+            PsiClass parent = PsiTreeUtil.getParentOfType(method, PsiClass.class);
+            buffer.append(String.format("EasyMock.expect(%s.%s( ", parent.getName(), method.getName()));
+        } else {
+            buffer.append(String.format("EasyMock.expect(%s.%s( ", callBeanName, method.getName()));
+        }
         if (parameters.length > 0) {
             for (int i = 0; i < parameters.length; i++) {
                 PsiParameter parameter = parameters[i];

@@ -192,7 +192,7 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private JPanel createMethodListPanel() {
-        codePanel = PanelBuilder.buildCodePanel(getProject(), () -> calcSelectedClass(), "Method: ");
+        codePanel = PanelBuilder.buildCodePanel(getProject(), () -> calcSelectedClass(), getDisposable());
         return codePanel;
     }
 

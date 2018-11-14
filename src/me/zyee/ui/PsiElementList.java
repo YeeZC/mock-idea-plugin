@@ -16,7 +16,7 @@ import java.util.List;
  * @author yee
  * @date 2018/11/2
  */
-public class PsiElementList<T extends PsiElement> extends JBList<T> {
+public class PsiElementList<T extends PsiElement> extends JBList<T> implements DataChangedProvider<T> {
     private final Comparator<T> comparator = (el0, el1) -> el0.getText().compareToIgnoreCase(el1.getText());
 
     public PsiElementList(boolean sort) {
@@ -32,14 +32,15 @@ public class PsiElementList<T extends PsiElement> extends JBList<T> {
         this(true);
     }
 
-    public void setElement(T[] elements) {
+    @Override
+    public void setData(T[] elements) {
         ((DataChangedProvider) getModel()).setData(elements);
     }
 
-    public void setElement(Collection<T> elements) {
+    @Override
+    public void setData(Collection<T> elements) {
         ((DataChangedProvider) getModel()).setData(elements);
     }
-
 
     private class ListModel extends SortedListModel<T> implements DataChangedProvider<T> {
 

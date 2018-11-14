@@ -13,13 +13,14 @@ import org.jetbrains.annotations.Nullable;
  * @date 2018/11/3
  */
 @State(
-        name = "EasyMockSetting",
+        name = "MockSetting",
         storages = {@Storage(
                 file = "$APP_CONFIG$/EasyMockSetting.xml"
         )}
 )
 public class EasyMockSetting implements PersistentStateComponent<Element> {
     private Boolean interfaceOnly = true;
+    private Boolean staticMock = true;
 
     public static EasyMockSetting getInstance() {
         return ServiceManager.getService(EasyMockSetting.class);
@@ -33,16 +34,26 @@ public class EasyMockSetting implements PersistentStateComponent<Element> {
         this.interfaceOnly = interfaceOnly;
     }
 
+    public Boolean isStaticMock() {
+        return !interfaceOnly && staticMock;
+    }
+
+    public void setStaticMock(Boolean staticMock) {
+        this.staticMock = staticMock;
+    }
+
     @Nullable
     @Override
     public Element getState() {
-        Element element = new Element("EasyMockSetting");
+        Element element = new Element("MockSetting");
         element.setAttribute("interfaceOnly", isInterfaceOnly().toString());
+        element.setAttribute("staticMock", isStaticMock().toString());
         return element;
     }
 
     @Override
     public void loadState(@NotNull Element element) {
         interfaceOnly = Boolean.valueOf(element.getAttributeValue("interfaceOnly", "true"));
+        interfaceOnly = Boolean.valueOf(element.getAttributeValue("staticMock", "true"));
     }
 }

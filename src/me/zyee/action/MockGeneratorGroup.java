@@ -11,7 +11,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorModificationUtil;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageDialogBuilder;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiDocumentManager;
@@ -35,7 +35,7 @@ import java.util.Set;
  * @author yee
  * @date 2018/10/31
  */
-public class EasyMockGeneratorGroup extends AnAction {
+public class MockGeneratorGroup extends AnAction {
     private SelectInfoNode node;
 
     @Override
@@ -46,38 +46,39 @@ public class EasyMockGeneratorGroup extends AnAction {
         if (null != editor) {
             Document document = editor.getDocument();
             if (!document.isWritable()) {
-                MessageDialogBuilder.YesNo dlg = MessageDialogBuilder.yesNo("ReadOnly File", "Attempt to modify read-only document");
-                dlg.show();
+                Messages.showErrorDialog("Attempt to modify read-only document", "ReadOnly File");
                 return;
             }
 
             PsiFile file = e.getData(LangDataKeys.PSI_FILE);
-            PsiCodeBlock codeBlock = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiCodeBlock.class);
-            if (null == codeBlock) {
-                MessageDialogBuilder.YesNo dlg = MessageDialogBuilder.yesNo("Code Block", "Generate code out of code block is not supported");
-                dlg.show();
-                return;
-            }
-            GeneratorDlg dialog = new GeneratorDlg("", project);
-            dialog.showDialog();
-            node = dialog.getNode();
-            String code;
-            if (null != node && null != (code = node.getPreview())) {
-                WriteAction.run(() ->
-                        CommandProcessor.getInstance().executeCommand(
-                                editor.getProject(),
-                                () -> replace(editor, code, file),
-                                null,
-                                null,
-                                UndoConfirmationPolicy.DEFAULT,
-                                editor.getDocument()));
+            if (file instanceof PsiJavaFile) {
+                PsiCodeBlock codeBlock = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiCodeBlock.class);
+                if (null == codeBlock) {
+                    Messages.showErrorDialog("Generate code out of code block is not supported", "Code Block");
+                    return;
+                }
+                GeneratorDlg dialog = new GeneratorDlg("", project);
+                dialog.showDialog();
+                node = dialog.getNode();
+                String code;
+                if (null != node && null != (code = node.getPreview())) {
+                    WriteAction.run(() ->
+                            CommandProcessor.getInstance().executeCommand(
+                                    editor.getProject(),
+                                    () -> replace(editor, code, (PsiJavaFile) file),
+                                    null,
+                                    null,
+                                    UndoConfirmationPolicy.DEFAULT,
+                                    editor.getDocument()));
+                }
+            } else {
+                Messages.showErrorDialog("Only Java Files are supported", "Java File");
             }
         }
     }
 
 
-    private void replace(Editor editor, String value, PsiFile file) {
-
+    private void replace(Editor editor, String value, PsiJavaFile file) {
         EditorModificationUtil.deleteSelectedText(editor);
         int caretOffset = editor.getCaretModel().getOffset();
         Document document = editor.getDocument();
@@ -89,20 +90,25 @@ public class EasyMockGeneratorGroup extends AnAction {
         PsiDocumentManager manager = PsiDocumentManager.getInstance(editor.getProject());
         manager.commitDocument(document);
         // import class
-        if (file instanceof PsiJavaFile) {
-            Set<PsiClass> imported = new HashSet<>();
-            PsiImportStatement[] statements = ((PsiJavaFile) file).getImportList().getImportStatements();
-            for (PsiImportStatement statement : statements) {
-                PsiClass psiClass = PsiType.getTypeByName(statement.getQualifiedName(), editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-                imported.add(psiClass);
-            }
-            PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-            PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-            importClass((PsiJavaFile) file, imported, easymock);
-            importClass((PsiJavaFile) file, imported, control);
-            importNode((PsiJavaFile) file, imported, node);
-            CodeStyleManager.getInstance(editor.getProject()).reformat(((PsiJavaFile) file).getImportList());
+        Set<PsiClass> imported = new HashSet<>();
+        PsiImportStatement[] statements = file.getImportList().getImportStatements();
+        for (PsiImportStatement statement : statements) {
+            PsiClass psiClass = PsiType.getTypeByName(statement.getQualifiedName(), editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+            imported.add(psiClass);
         }
+        PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+        PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+        importClass(file, imported, easymock);
+        importClass(file, imported, control);
+        importNode(file, imported, node);
+        PsiClass testCodeClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
+//        testCodeClass.add()
+        PsiClass runWith = PsiType.getTypeByName("org.junit.runner.RunWith", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+        PsiClass powerMockRunner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
+        if (null != powerMockRunner) {
+
+        }
+        CodeStyleManager.getInstance(editor.getProject()).reformat(file.getImportList());
 
         // format code
         CodeStyleManager.getInstance(editor.getProject()).reformat(method);

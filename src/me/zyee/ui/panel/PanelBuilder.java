@@ -11,8 +11,8 @@ import me.zyee.getter.PsiClassGetter;
  * @date 2018/11/7
  */
 public class PanelBuilder {
-    public static CodePanel buildCodePanel(Project project, PsiClass psiClass, String label) {
-        return new CodePanel(project, label) {
+    public static CodePanel buildCodePanel(Project project, PsiClass psiClass, Disposable disposable) {
+        return new CodePanel(project, disposable) {
             @Override
             protected PsiClass getPsiClass() {
                 return psiClass;
@@ -20,8 +20,8 @@ public class PanelBuilder {
         };
     }
 
-    public static CodePanel buildCodePanel(Project project, PsiClassGetter callable, String label) {
-        return new CodePanel(project, label) {
+    public static CodePanel buildCodePanel(Project project, PsiClassGetter callable, Disposable disposable) {
+        return new CodePanel(project, disposable) {
             @Override
             protected PsiClass getPsiClass() {
                 return callable.get();

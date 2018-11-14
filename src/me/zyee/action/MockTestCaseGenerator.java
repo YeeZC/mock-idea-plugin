@@ -19,10 +19,10 @@ import org.jetbrains.annotations.NotNull;
  * @author yee
  * @date 2018/11/7
  */
-public class EasyMockTestCaseGenerator extends AnAction {
+public class MockTestCaseGenerator extends AnAction {
     private JavaDirectoryService directoryService;
 
-    public EasyMockTestCaseGenerator() {
+    public MockTestCaseGenerator() {
         this.directoryService = JavaDirectoryService.getInstance();
     }
 

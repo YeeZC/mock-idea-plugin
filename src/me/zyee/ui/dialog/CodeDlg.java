@@ -36,7 +36,7 @@ public class CodeDlg extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel panel = new JPanel(new VerticalFlowLayout());
-        codePanel = PanelBuilder.buildCodePanel(project, psiClass, psiClass.getQualifiedName());
+        codePanel = PanelBuilder.buildCodePanel(project, psiClass, getDisposable());
         codePanel.setSize(JBUI.size(510, 300));
         codePanel.loadClass();
         panel.add(codePanel);

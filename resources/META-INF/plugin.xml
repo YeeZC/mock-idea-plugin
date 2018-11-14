@@ -1,6 +1,6 @@
 <idea-plugin>
   <id>me.zyee.easymockgemerator</id>
-  <name>EasyMockGenerator</name>
+  <name>Mock Test Generator</name>
     <version>1.3</version>
   <vendor email="yee@zyee.me" url="http://yee.zyee.site">yee</vendor>
 
@@ -33,12 +33,12 @@
 
   <actions>
     <!-- Add your actions here -->
-      <action id="me.zyee.easymock.generator" class="me.zyee.action.EasyMockGeneratorGroup" text="EasyMock Object"
-              description="EasyMock Object">
+    <action id="me.zyee.easymock.generator" class="me.zyee.action.MockGeneratorGroup" text="Mock Object"
+            description="EasyMock Object">
           <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
     </action>
-      <action id="me.zyee.easymock.testcase" class="me.zyee.action.EasyMockTestCaseGenerator"
-              text="EasyMock TestCase" description="EasyMock TestCase">
+    <action id="me.zyee.easymock.testcase" class="me.zyee.action.MockTestCaseGenerator"
+            text="Mock TestCase" description="Mock TestCase">
           <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
       </action>
   </actions>

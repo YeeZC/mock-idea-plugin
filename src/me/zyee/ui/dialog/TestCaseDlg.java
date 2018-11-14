@@ -68,8 +68,8 @@ public class TestCaseDlg extends DialogWrapper implements PsiClassGetter {
             PsiClass selected = (PsiClass) inheritor.getSelectedItem();
             if (null != selected) {
                 SwingUtilities.invokeLater(() -> {
-                            mockFields.setElement(selected.getFields());
-                            testMethods.setElement(basePsiClass.getMethods());
+                    mockFields.setData(selected.getFields());
+                    testMethods.setData(basePsiClass.getMethods());
                         }
                 );
             }
