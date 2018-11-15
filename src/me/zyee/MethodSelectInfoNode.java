@@ -7,11 +7,13 @@ import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
+import me.zyee.config.Framework;
 import me.zyee.config.MockSetting;
 import me.zyee.format.CodeFormat;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,10 +27,20 @@ public class MethodSelectInfoNode implements CodeInfoNode {
     private Map<Integer, SelectInfoNode> paramDepNode;
     private SelectInfoNode returnTypeDepNode;
     private Set<String> contains;
+    private Set<PsiClass> staticMock;
 
     public MethodSelectInfoNode(String callBeanName) {
         this.callBeanName = callBeanName;
         this.paramDepNode = new HashMap<>();
+        this.staticMock = new HashSet<>();
+    }
+
+    public Set<PsiClass> getStaticMock() {
+        return staticMock;
+    }
+
+    public void setStaticMock(Set<PsiClass> staticMock) {
+        this.staticMock = staticMock;
     }
 
     public void setCallBeanName(String callBeanName) {
@@ -61,7 +73,8 @@ public class MethodSelectInfoNode implements CodeInfoNode {
 
     @Override
     public String getCode() {
-        if (method.getReturnType() == PsiType.VOID){
+        if (PsiType.VOID.equals(method.getReturnType())
+                && Framework.EASYMOCK.equals(MockSetting.getInstance().getFramework())) {
             return getVoidCode();
         } else {
             return getObjectCode();
@@ -82,6 +95,7 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         PsiParameter[] parameters = method.getParameterList().getParameters();
         if (isStatic()) {
             PsiClass parent = PsiTreeUtil.getParentOfType(method, PsiClass.class);
+            staticMock.add(parent);
             buffer.append(framework.mockMethodStartFormat(parent.getName(), method.getName()));
         } else {
             buffer.append(framework.mockMethodStartFormat(callBeanName, method.getName()));
@@ -90,6 +104,9 @@ public class MethodSelectInfoNode implements CodeInfoNode {
             for (int i = 0; i < parameters.length; i++) {
                 PsiParameter parameter = parameters[i];
                 SelectInfoNode node = paramDepNode.get(i);
+                if (null != node) {
+                    node.setStaticMockSet(staticMock);
+                }
                 String paramName = calculateBeanName(parameter.getName(), paramBuilder, node);
                 buffer.append(paramName).append(",");
             }
@@ -97,12 +114,15 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         buffer.setCharAt(buffer.length() - 1, ')');
         buffer.append(")");
         PsiElement type = method.getReturnTypeElement();
-        String mockBeanName = "mock" + type.getText();
-        int index = mockBeanName.indexOf("<");
-        if (index >= 0) {
-            mockBeanName = mockBeanName.substring(0, index);
+        String mockBeanName = "mockReturn";
+        if (null != type) {
+            mockBeanName = "mock" + type.getText();
+            int index = mockBeanName.indexOf("<");
+            if (index >= 0) {
+                mockBeanName = mockBeanName.substring(0, index);
+            }
+            mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
         }
-        mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
         buffer.append(framework.mockMethodEndFormat(mockBeanName));
         paramBuilder.append(returnTypeBuilder).append(buffer);
         return paramBuilder.toString();

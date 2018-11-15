@@ -15,7 +15,6 @@ import com.intellij.util.ui.JBUI;
 import me.zyee.DataProcessors;
 import me.zyee.MethodSelectInfoNode;
 import me.zyee.SelectInfoNode;
-import me.zyee.config.Framework;
 import me.zyee.config.MockSetting;
 import me.zyee.ui.PsiElementList;
 import me.zyee.ui.dialog.ParameterDlg;
@@ -68,7 +67,7 @@ public abstract class CodePanel extends JPanel {
 //            textPane.setText(node.getPreview());
         }));
         fieldsPanel = ScrollPaneFactory.createScrollPane(fieldList);
-        if (MockSetting.getInstance().getFramework() != Framework.EASYMOCK) {
+        if (false) {
             tabbedPane.addTab("Fields", fieldsPanel);
         }
         add(tabbedPane.getComponent());
@@ -117,14 +116,14 @@ public abstract class CodePanel extends JPanel {
         if (!MockSetting.getInstance().isStaticMock()) {
             list.setData(DataProcessors.AccessList.of(methods).execute(element -> {
                 PsiModifierList list = element.getModifierList();
-                return !list.hasModifierProperty(PsiModifier.STATIC);
+                return !list.hasModifierProperty(PsiModifier.STATIC) && !element.isConstructor();
             }));
             fieldList.setData(DataProcessors.AccessList.of(fields).execute(element -> {
                 PsiModifierList list = element.getModifierList();
                 return !list.hasModifierProperty(PsiModifier.STATIC);
             }));
         } else {
-            list.setData(methods);
+            list.setData(DataProcessors.AccessList.of(methods).execute(element -> !element.isConstructor()));
             fieldList.setData(fields);
         }
 

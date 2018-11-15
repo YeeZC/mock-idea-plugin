@@ -1,8 +1,10 @@
 package me.zyee.format;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -24,4 +26,12 @@ public interface CodeFormat {
     List<PsiClass> importList(Project project);
 
     String getMavenConfig();
+
+    List<PsiClass> annotationClasses(Project project);
+
+    List<PsiAnnotation> psiAnnotations(Project project, Collection<PsiClass> others);
+
+//    String anyObject();
+//
+//    String voidEnd();
 }

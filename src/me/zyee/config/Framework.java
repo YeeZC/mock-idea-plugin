@@ -1,13 +1,18 @@
 package me.zyee.config;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.search.GlobalSearchScope;
 import me.zyee.format.CodeFormat;
 import me.zyee.ui.UIItem;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,6 +87,7 @@ public enum Framework implements UIItem, CodeFormat {
                     "    <scope>test</scope>\n" +
                     "</dependency>";
         }
+
     }, MOCKITO("Mockito") {
         @Override
         public CodeFormat getCodeFormat(boolean staticMock) {
@@ -144,6 +150,7 @@ public enum Framework implements UIItem, CodeFormat {
                     "    <scope>test</scope>\n" +
                     "</dependency>";
         }
+
     }, POWER_EASYMOCK("PowerEasy") {
         @Override
         public CodeFormat getCodeFormat(boolean staticMock) {
@@ -187,26 +194,31 @@ public enum Framework implements UIItem, CodeFormat {
         public List<PsiClass> importList(Project project) {
             List<PsiClass> list = new ArrayList<>();
             PsiClass runner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", project, GlobalSearchScope.allScope(project)).resolve();
-            PsiClass prepare = PsiType.getTypeByName("org.powermock.core.classloader.annotations.PrepareForTest", project, GlobalSearchScope.allScope(project)).resolve();
             PsiClass powerMock = PsiType.getTypeByName("org.powermock.api.easymock.PowerMock", project, GlobalSearchScope.allScope(project)).resolve();
-            PsiClass runWith = PsiType.getTypeByName(" org.junit.runner.RunWith", project, GlobalSearchScope.allScope(project)).resolve();
-            PsiClass easyMock = PsiType.getTypeByName(" org.easymock.EasyMock", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass easyMock = PsiType.getTypeByName("org.easymock.EasyMock", project, GlobalSearchScope.allScope(project)).resolve();
+
             if (null != runner) {
                 list.add(runner);
             }
-            if (null != prepare) {
-                list.add(prepare);
-            }
+
             if (null != powerMock) {
                 list.add(powerMock);
             }
-            if (null != runWith) {
-                list.add(runWith);
-            }
+
             if (null != easyMock) {
                 list.add(easyMock);
             }
             return Collections.unmodifiableList(list);
+        }
+
+        @Override
+        public List<PsiClass> annotationClasses(Project project) {
+            return powerMockAnnotationClasses(project);
+        }
+
+        @Override
+        public List<PsiAnnotation> psiAnnotations(Project project, Collection<PsiClass> others) {
+            return powerMockPsiAnnotations(project, others);
         }
 
         @Override
@@ -278,21 +290,13 @@ public enum Framework implements UIItem, CodeFormat {
         public List<PsiClass> importList(Project project) {
             List<PsiClass> list = new ArrayList<>();
             PsiClass runner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", project, GlobalSearchScope.allScope(project)).resolve();
-            PsiClass prepare = PsiType.getTypeByName("org.powermock.core.classloader.annotations.PrepareForTest", project, GlobalSearchScope.allScope(project)).resolve();
             PsiClass powerMock = PsiType.getTypeByName("org.powermock.api.mockito.PowerMockito", project, GlobalSearchScope.allScope(project)).resolve();
-            PsiClass runWith = PsiType.getTypeByName("org.junit.runner.RunWith", project, GlobalSearchScope.allScope(project)).resolve();
             PsiClass easyMock = PsiType.getTypeByName("org.mockito.Mockito", project, GlobalSearchScope.allScope(project)).resolve();
             if (null != runner) {
                 list.add(runner);
             }
-            if (null != prepare) {
-                list.add(prepare);
-            }
             if (null != powerMock) {
                 list.add(powerMock);
-            }
-            if (null != runWith) {
-                list.add(runWith);
             }
             if (null != easyMock) {
                 list.add(easyMock);
@@ -327,7 +331,51 @@ public enum Framework implements UIItem, CodeFormat {
                     "    <scope>test</scope>\n" +
                     "</dependency>";
         }
+
+        @Override
+        public List<PsiClass> annotationClasses(Project project) {
+            return powerMockAnnotationClasses(project);
+        }
+
+        @Override
+        public List<PsiAnnotation> psiAnnotations(Project project, Collection<PsiClass> others) {
+            return powerMockPsiAnnotations(project, others);
+        }
     };
+
+    @NotNull
+    private static List<PsiAnnotation> powerMockPsiAnnotations(Project project, Collection<PsiClass> others) {
+        List<PsiAnnotation> annotations = new ArrayList<>();
+        PsiElementFactory factory = JavaPsiFacade.getElementFactory(project);
+        PsiAnnotation runWith = factory.createAnnotationFromText(String.format("@org.junit.runner.RunWith(PowerMockRunner.class)"), null);
+        if (!others.isEmpty()) {
+            StringBuilder buffer = new StringBuilder("@org.powermock.core.classloader.annotations.PrepareForTest( ");
+            for (PsiClass other : others) {
+                buffer.append(other.getName()).append(".class, ");
+            }
+            buffer.setLength(buffer.length() - 2);
+            buffer.append(")");
+            PsiAnnotation prepare = factory.createAnnotationFromText(buffer.toString(), null);
+            annotations.add(prepare);
+        }
+        annotations.add(runWith);
+        return annotations;
+    }
+
+    @NotNull
+    private static List<PsiClass> powerMockAnnotationClasses(Project project) {
+        List<PsiClass> list = new ArrayList<>();
+        PsiClass runWith = PsiType.getTypeByName("org.junit.runner.RunWith", project, GlobalSearchScope.allScope(project)).resolve();
+        PsiClass prepare = PsiType.getTypeByName("org.powermock.core.classloader.annotations.PrepareForTest", project, GlobalSearchScope.allScope(project)).resolve();
+        if (null != prepare) {
+            list.add(prepare);
+        }
+        if (null != runWith) {
+            list.add(runWith);
+        }
+        return list;
+    }
+
     private String framework;
 
     Framework(String framework) {
@@ -340,4 +388,14 @@ public enum Framework implements UIItem, CodeFormat {
     }
 
     public abstract CodeFormat getCodeFormat(boolean staticMock);
+
+    @Override
+    public List<PsiClass> annotationClasses(Project project) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<PsiAnnotation> psiAnnotations(Project project, Collection<PsiClass> others) {
+        return Collections.emptyList();
+    }
 }

@@ -37,10 +37,10 @@
             description="EasyMock Object">
           <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
     </action>
-    <action id="me.zyee.easymock.testcase" class="me.zyee.action.MockTestCaseGenerator"
-            text="Mock TestCase" description="Mock TestCase">
-          <add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>
-      </action>
+      <!--<action id="me.zyee.easymock.testcase" class="me.zyee.action.MockTestCaseGenerator"-->
+      <!--text="Mock TestCase" description="Mock TestCase">-->
+      <!--<add-to-group group-id="GenerateGroup" anchor="after" relative-to-action="JavaGenerateGroup1"/>-->
+      <!--</action>-->
   </actions>
 
 </idea-plugin>

@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class SelectInfoNode implements CodeInfoNode {
     private Set<String> contains;
     private String mockBeanName;
     private String baseName;
+    private Set<PsiClass> staticMockSet;
 
     public SelectInfoNode(@NotNull PsiClass psiClass) {
         this.psiClass = psiClass;
@@ -31,6 +33,7 @@ public class SelectInfoNode implements CodeInfoNode {
         baseName = mockBeanName;
         methods = new HashMap<>();
         tempMethods = new HashMap<>();
+        staticMockSet = new HashSet<>();
     }
 
     public String getMockBeanName() {
@@ -84,6 +87,7 @@ public class SelectInfoNode implements CodeInfoNode {
         if (!methods.isEmpty()) {
             for (MethodSelectInfoNode value : methods.values()) {
                 value.setContains(contains);
+                value.setStaticMock(staticMockSet);
                 value.setCallBeanName(mockBeanName);
                 buffer.append(value.getCode());
                 staticMock |= value.isStatic();
@@ -93,6 +97,7 @@ public class SelectInfoNode implements CodeInfoNode {
             for (Map.Entry<PsiMethod, MethodSelectInfoNode> entry : tempMethods.entrySet()) {
                 if (!methods.containsKey(entry.getKey())) {
                     MethodSelectInfoNode value = entry.getValue();
+                    value.setStaticMock(staticMockSet);
                     value.setCallBeanName(mockBeanName);
                     value.setContains(contains);
                     buffer.append(value.getCode());
@@ -101,6 +106,7 @@ public class SelectInfoNode implements CodeInfoNode {
             }
         }
         if (isStatic() || staticMock) {
+            staticMockSet.add(psiClass);
             staticBuffer.append(framework.start(className));
         }
         staticBuffer.append(buffer);
@@ -119,5 +125,13 @@ public class SelectInfoNode implements CodeInfoNode {
 
     public void setContains(Set<String> contains) {
         this.contains = contains;
+    }
+
+    public Set<PsiClass> getStaticMockSet() {
+        return staticMockSet;
+    }
+
+    public void setStaticMockSet(Set<PsiClass> staticMockSet) {
+        this.staticMockSet = staticMockSet;
     }
 }
