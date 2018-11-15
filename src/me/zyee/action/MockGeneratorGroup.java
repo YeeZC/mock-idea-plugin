@@ -97,19 +97,10 @@ public class MockGeneratorGroup extends AnAction {
             PsiClass psiClass = PsiType.getTypeByName(statement.getQualifiedName(), editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
             imported.add(psiClass);
         }
-        switch (MockSetting.getInstance().getFramework()) {
-            case MOCKITO:
-                break;
-            case EASYMOCK:
-                PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-                PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", editor.getProject(), GlobalSearchScope.allScope(editor.getProject())).resolve();
-                importClass(file, imported, easymock);
-                importClass(file, imported, control);
-                importNode(file, imported, node);
-                break;
-            default:
-                break;
+        for (PsiClass psiClass : MockSetting.getInstance().getCodeFormat().importList(editor.getProject())) {
+            importClass(file, imported, psiClass);
         }
+        importNode(file, imported, node);
         CodeStyleManager.getInstance(editor.getProject()).reformat(file.getImportList());
         // format code
         CodeStyleManager.getInstance(editor.getProject()).reformat(method);

@@ -67,6 +67,11 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         }
     }
 
+    @Override
+    public boolean isStatic() {
+        return method.getModifierList().hasExplicitModifier("static");
+    }
+
     @NotNull
     private String getObjectCode() {
         CodeFormat framework = MockSetting.getInstance().getCodeFormat();
@@ -74,7 +79,7 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         StringBuffer returnTypeBuilder = new StringBuffer();
         StringBuffer buffer = new StringBuffer();
         PsiParameter[] parameters = method.getParameterList().getParameters();
-        if (method.getModifierList().hasModifierProperty("static")) {
+        if (isStatic()) {
             PsiClass parent = PsiTreeUtil.getParentOfType(method, PsiClass.class);
             buffer.append(framework.mockMethodStartFormat(parent.getName(), method.getName()));
         } else {

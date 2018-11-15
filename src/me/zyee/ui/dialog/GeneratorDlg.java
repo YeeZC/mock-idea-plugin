@@ -23,9 +23,11 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.intellij.openapi.wm.ex.IdeFocusTraversalPolicy;
 import com.intellij.pom.Navigatable;
+import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
@@ -124,7 +126,31 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
     }
 
     private Filter<PsiClass> allFilter() {
-        return element -> !MockSetting.getInstance().isInterfaceOnly() || element.isInterface();
+        return element -> {
+            if (element instanceof PsiAnonymousClass) {
+                return false;
+            }
+            switch (MockSetting.getInstance().getFramework()) {
+                case EASYMOCK:
+
+                    if (MockSetting.getInstance().isInterfaceOnly()) {
+                        return element.isInterface();
+                    }
+                    if (!MockSetting.getInstance().isStaticMock()) {
+                        PsiModifierList list = element.getModifierList();
+                        return null != list && (!list.hasModifierProperty("static") || !list.hasModifierProperty("final"));
+                    }
+                    return true;
+                case MOCKITO:
+                    if (!MockSetting.getInstance().isStaticMock()) {
+                        PsiModifierList list = element.getModifierList();
+                        return null != list && (!list.hasModifierProperty("static") || !list.hasModifierProperty("final"));
+                    }
+                    return true;
+                default:
+                    return true;
+            }
+        };
     }
 
     @Override

@@ -2,13 +2,13 @@ package me.zyee;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifierList;
 import me.zyee.config.MockSetting;
 import me.zyee.format.CodeFormat;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,19 +68,15 @@ public class SelectInfoNode implements CodeInfoNode {
                 tempMethods.put(method, node);
             }
         }
-        Iterator<Map.Entry<PsiMethod, MethodSelectInfoNode>> it = tempMethods.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<PsiMethod, MethodSelectInfoNode> entry = it.next();
-            if (!methods.contains(entry.getKey())) {
-                it.remove();
-            }
-        }
+        tempMethods.entrySet().removeIf(entry -> !methods.contains(entry.getKey()));
     }
 
     @Override
     public String getCode() {
         CodeFormat framework = MockSetting.getInstance().getCodeFormat();
+        StringBuffer staticBuffer = new StringBuffer();
         String className = psiClass.getName();
+        boolean staticMock = false;
         contains.add(getMockBeanName());
         String text = framework.mockObjectHeadFormat(className, mockBeanName);
         StringBuffer buffer = new StringBuffer(text);
@@ -89,22 +85,31 @@ public class SelectInfoNode implements CodeInfoNode {
                 value.setContains(contains);
                 value.setCallBeanName(mockBeanName);
                 buffer.append(value.getCode());
+                staticMock |= value.isStatic();
             }
         }
         if (!tempMethods.isEmpty()) {
-            Iterator<Map.Entry<PsiMethod, MethodSelectInfoNode>> it = tempMethods.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<PsiMethod, MethodSelectInfoNode> entry = it.next();
+            for (Map.Entry<PsiMethod, MethodSelectInfoNode> entry : tempMethods.entrySet()) {
                 if (!methods.containsKey(entry.getKey())) {
                     MethodSelectInfoNode value = entry.getValue();
                     value.setCallBeanName(mockBeanName);
                     value.setContains(contains);
                     buffer.append(value.getCode());
+                    staticMock |= value.isStatic();
                 }
             }
         }
+        if (isStatic() || staticMock) {
+            staticBuffer.append(framework.start(className));
+        }
+        staticBuffer.append(buffer);
+        return staticBuffer.toString();
+    }
 
-        return buffer.toString();
+    @Override
+    public boolean isStatic() {
+        PsiModifierList list = psiClass.getModifierList();
+        return null != list && (list.hasModifierProperty("static") || list.hasModifierProperty("final"));
     }
 
     public Set<String> getContains() {

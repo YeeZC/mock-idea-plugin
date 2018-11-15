@@ -6,6 +6,7 @@ import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBRadioButton;
 import com.intellij.ui.components.panels.HorizontalLayout;
+import com.intellij.util.ui.JBUI;
 import me.zyee.ui.UIItemComboBox;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
@@ -29,6 +31,8 @@ public class MockConfiguration implements SearchableConfigurable {
     private JBCheckBox staticMockCheckBox = new JBCheckBox("Mock Static Method (Powered by PowerMock)");
     private UIItemComboBox<Framework> frameworkComboBox;
     private Framework selectedFramework = Framework.EASYMOCK;
+    private JEditorPane mavenPane = new JEditorPane();
+
 
 
     @NotNull
@@ -67,11 +71,13 @@ public class MockConfiguration implements SearchableConfigurable {
         interfaceOnlyButton.addChangeListener(e -> {
             this.interfaceOnly = interfaceOnlyButton.isSelected();
             staticMockCheckBox.setEnabled(!interfaceOnly);
+            mavenPane.setText(selectedFramework.getCodeFormat(!interfaceOnly && staticMock).getMavenConfig());
             modify = true;
         });
         staticMockCheckBox.setSelected(MockSetting.getInstance().isStaticMock());
         staticMockCheckBox.addChangeListener(e -> {
             staticMock = staticMockCheckBox.isSelected();
+            mavenPane.setText(selectedFramework.getCodeFormat(staticMock).getMavenConfig());
             modify = true;
         });
         panel.add(new JSeparator());
@@ -87,7 +93,13 @@ public class MockConfiguration implements SearchableConfigurable {
             } else {
                 staticMockCheckBox.setEnabled(!interfaceOnly);
             }
+            mavenPane.setText(selectedFramework.getCodeFormat(staticMock && staticMockCheckBox.isEnabled()).getMavenConfig());
         });
+        panel.add(new JSeparator());
+        panel.add(new JBLabel("Maven config"));
+        mavenPane.setMaximumSize(JBUI.size(-1, 100));
+        mavenPane.setEditable(false);
+        panel.add(mavenPane);
         frameworkComboBox.setSelectedIndex(0);
         modify = false;
         return panel;

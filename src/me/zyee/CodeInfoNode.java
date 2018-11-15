@@ -17,4 +17,6 @@ public interface CodeInfoNode {
         buffer.append(framework.replay());
         return buffer.toString();
     }
+
+    boolean isStatic();
 }

@@ -1,7 +1,15 @@
 package me.zyee.config;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiType;
+import com.intellij.psi.search.GlobalSearchScope;
 import me.zyee.format.CodeFormat;
 import me.zyee.ui.UIItem;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author yee
@@ -44,6 +52,36 @@ public enum Framework implements UIItem, CodeFormat {
         public String start(String... args) {
             return "IMocksControl control = EasyMock.createControl();\n";
         }
+
+        @Override
+        public List<PsiClass> importList(Project project) {
+            List<PsiClass> list = new ArrayList<>();
+            PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", project, GlobalSearchScope.allScope(project)).resolve();
+            if (null != easymock) {
+                list.add(easymock);
+            }
+            if (null != control) {
+                list.add(control);
+            }
+            return Collections.unmodifiableList(list);
+        }
+
+        @Override
+        public String getMavenConfig() {
+            return "<dependency>\n" +
+                    "    <groupId>junit</groupId>\n" +
+                    "    <artifactId>junit</artifactId>\n" +
+                    "    <version>4.12</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.easymock</groupId>\n" +
+                    "    <artifactId>easymock</artifactId>\n" +
+                    "    <version>3.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>";
+        }
     }, MOCKITO("Mockito") {
         @Override
         public CodeFormat getCodeFormat(boolean staticMock) {
@@ -57,27 +95,54 @@ public enum Framework implements UIItem, CodeFormat {
 
         @Override
         public String mockMethodStartFormat(String beanName, String methodName) {
-            return null;
+            return String.format("Mockito.when(%s.%s( ", beanName, methodName);
         }
 
         @Override
         public String mockMethodEndFormat(String beanName) {
-            return null;
+            return String.format(".thenReturn(%s);\n", beanName);
         }
 
         @Override
         public String mockObjectHeadFormat(String className, String beanName) {
-            return null;
+            return String.format("%s %s = Mockito.mock(%s.class);\n", className, beanName, className);
         }
 
         @Override
         public String replay() {
-            return null;
+            return "";
         }
 
         @Override
         public String start(String... args) {
-            return null;
+            return "";
+        }
+
+        @Override
+        public List<PsiClass> importList(Project project) {
+            List<PsiClass> list = new ArrayList<>();
+            PsiClass mockito = PsiType.getTypeByName("org.mockito.Mockito", project, GlobalSearchScope.allScope(project)).resolve();
+            if (null != mockito) {
+                list.add(mockito);
+            }
+            return Collections.unmodifiableList(list);
+
+        }
+
+        @Override
+        public String getMavenConfig() {
+            return "<dependency>\n" +
+                    "    <groupId>junit</groupId>\n" +
+                    "    <artifactId>junit</artifactId>\n" +
+                    "    <version>4.12</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.mockito</groupId>\n" +
+                    "    <artifactId>mockito-all</artifactId>\n" +
+                    "    <version>2.0.2-beta</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>";
         }
     }, POWER_EASYMOCK("PowerEasy") {
         @Override
@@ -92,27 +157,83 @@ public enum Framework implements UIItem, CodeFormat {
 
         @Override
         public String mockMethodStartFormat(String beanName, String methodName) {
-            return null;
+            return EASYMOCK.mockMethodStartFormat(beanName, methodName);
         }
 
         @Override
         public String mockMethodEndFormat(String beanName) {
-            return null;
+            return EASYMOCK.mockMethodEndFormat(beanName);
         }
 
         @Override
         public String mockObjectHeadFormat(String className, String beanName) {
-            return null;
+            return String.format("%s %s = PowerMock.createMock(%s.class);\n", className, beanName, className);
         }
 
         @Override
         public String replay() {
-            return null;
+            return "PowerMock.replayAll();\n";
         }
 
         @Override
         public String start(String... args) {
-            return null;
+            if (null != args && args.length > 0) {
+                return String.format("PowerMock.mockStatic(%s.class);\n", args[0]);
+            }
+            return "";
+        }
+
+        @Override
+        public List<PsiClass> importList(Project project) {
+            List<PsiClass> list = new ArrayList<>();
+            PsiClass runner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass prepare = PsiType.getTypeByName("org.powermock.core.classloader.annotations.PrepareForTest", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass powerMock = PsiType.getTypeByName("org.powermock.api.easymock.PowerMock", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass runWith = PsiType.getTypeByName(" org.junit.runner.RunWith", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass easyMock = PsiType.getTypeByName(" org.easymock.EasyMock", project, GlobalSearchScope.allScope(project)).resolve();
+            if (null != runner) {
+                list.add(runner);
+            }
+            if (null != prepare) {
+                list.add(prepare);
+            }
+            if (null != powerMock) {
+                list.add(powerMock);
+            }
+            if (null != runWith) {
+                list.add(runWith);
+            }
+            if (null != easyMock) {
+                list.add(easyMock);
+            }
+            return Collections.unmodifiableList(list);
+        }
+
+        @Override
+        public String getMavenConfig() {
+            return "<dependency>\n" +
+                    "    <groupId>junit</groupId>\n" +
+                    "    <artifactId>junit</artifactId>\n" +
+                    "    <version>4.12</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.easymock</groupId>\n" +
+                    "    <artifactId>easymock</artifactId>\n" +
+                    "    <version>3.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.powermock</groupId>\n" +
+                    "    <artifactId>powermock-module-junit4</artifactId>\n" +
+                    "    <version>1.7.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.powermock</groupId>\n" +
+                    "    <artifactId>powermock-api-easymock</artifactId>\n" +
+                    "    <version>1.7.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>";
         }
     }, POWER_MOCKITO("PowerMockito") {
         @Override
@@ -127,27 +248,84 @@ public enum Framework implements UIItem, CodeFormat {
 
         @Override
         public String mockMethodStartFormat(String beanName, String methodName) {
-            return null;
+            return MOCKITO.mockMethodStartFormat(beanName, methodName);
         }
 
         @Override
         public String mockMethodEndFormat(String beanName) {
-            return null;
+            return MOCKITO.mockMethodEndFormat(beanName);
         }
 
         @Override
         public String mockObjectHeadFormat(String className, String beanName) {
-            return null;
+            return String.format("%s %s = PowerMockito.mock(%s.class);\n", className, beanName, className);
         }
 
         @Override
         public String replay() {
-            return null;
+            return "";
         }
 
         @Override
         public String start(String... args) {
-            return null;
+            if (null != args && args.length > 0) {
+                return String.format("PowerMockito.mockStatic(%s.class);\n", args[0]);
+            }
+            return "";
+        }
+
+        @Override
+        public List<PsiClass> importList(Project project) {
+            List<PsiClass> list = new ArrayList<>();
+            PsiClass runner = PsiType.getTypeByName("org.powermock.modules.junit4.PowerMockRunner", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass prepare = PsiType.getTypeByName("org.powermock.core.classloader.annotations.PrepareForTest", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass powerMock = PsiType.getTypeByName("org.powermock.api.mockito.PowerMockito", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass runWith = PsiType.getTypeByName("org.junit.runner.RunWith", project, GlobalSearchScope.allScope(project)).resolve();
+            PsiClass easyMock = PsiType.getTypeByName("org.mockito.Mockito", project, GlobalSearchScope.allScope(project)).resolve();
+            if (null != runner) {
+                list.add(runner);
+            }
+            if (null != prepare) {
+                list.add(prepare);
+            }
+            if (null != powerMock) {
+                list.add(powerMock);
+            }
+            if (null != runWith) {
+                list.add(runWith);
+            }
+            if (null != easyMock) {
+                list.add(easyMock);
+            }
+            return Collections.unmodifiableList(list);
+        }
+
+        @Override
+        public String getMavenConfig() {
+            return "<dependency>\n" +
+                    "    <groupId>junit</groupId>\n" +
+                    "    <artifactId>junit</artifactId>\n" +
+                    "    <version>4.12</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.mockito</groupId>\n" +
+                    "    <artifactId>mockito-all</artifactId>\n" +
+                    "    <version>2.0.2-beta</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.powermock</groupId>\n" +
+                    "    <artifactId>powermock-module-junit4</artifactId>\n" +
+                    "    <version>1.7.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>\n" +
+                    "<dependency>\n" +
+                    "    <groupId>org.powermock</groupId>\n" +
+                    "    <artifactId>powermock-api-mockito2</artifactId>\n" +
+                    "    <version>1.7.4</version>\n" +
+                    "    <scope>test</scope>\n" +
+                    "</dependency>";
         }
     };
     private String framework;
