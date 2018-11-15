@@ -113,6 +113,11 @@ public class MockGeneratorGroup extends AnAction {
         CodeStyleManager.getInstance(editor.getProject()).reformat(file.getImportList());
         // format code
         CodeStyleManager.getInstance(editor.getProject()).reformat(method);
+        PsiClass parent = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiClass.class);
+        PsiModifierList list = parent.getModifierList();
+        if (null != list) {
+            CodeStyleManager.getInstance(editor.getProject()).reformat(list);
+        }
     }
 
     private void annotation(Editor editor, Set<PsiClass> staticMockSet, PsiJavaFile file, Set<PsiClass> imported, CodeFormat codeFormat) {
@@ -120,22 +125,28 @@ public class MockGeneratorGroup extends AnAction {
             PsiClass parent = PsiTreeUtil.getParentOfType(file.findElementAt(editor.getCaretModel().getOffset()), PsiClass.class);
             List<PsiClass> annotations = codeFormat.annotationClasses(editor.getProject());
             if (null != parent && !annotations.isEmpty()) {
+                PsiModifierList modifierList = parent.getModifierList();
                 for (PsiClass annotation : annotations) {
                     importClass(file, imported, annotation);
+                    codeFormat.updateStaticMock(editor.getProject(), staticMockSet, annotation, modifierList);
                 }
                 PsiDocComment docComment = parent.getDocComment();
                 List<PsiAnnotation> psiAnnotations = codeFormat.psiAnnotations(editor.getProject(), staticMockSet);
-                PsiModifierList modifierList = parent.getModifierList();
+                PsiAnnotation exist;
                 if (null != docComment) {
                     for (PsiAnnotation psiAnnotation : psiAnnotations) {
-                        if (null == modifierList || null == modifierList.findAnnotation(psiAnnotation.getQualifiedName())) {
+                        if (null == modifierList || null == (exist = modifierList.findAnnotation(psiAnnotation.getQualifiedName()))) {
                             parent.addAfter(psiAnnotation, docComment);
+                        } else {
+                            exist.replace(psiAnnotation);
                         }
                     }
                 } else {
                     for (PsiAnnotation psiAnnotation : psiAnnotations) {
-                        if (null == modifierList || null == modifierList.findAnnotation(psiAnnotation.getQualifiedName())) {
+                        if (null == modifierList || null == (exist = modifierList.findAnnotation(psiAnnotation.getQualifiedName()))) {
                             parent.addBefore(psiAnnotation, parent);
+                        } else {
+                            exist.replace(psiAnnotation);
                         }
                     }
                 }

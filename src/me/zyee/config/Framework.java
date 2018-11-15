@@ -5,16 +5,20 @@ import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElementFactory;
+import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.PsiShortNamesCache;
 import me.zyee.format.CodeFormat;
 import me.zyee.ui.UIItem;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author yee
@@ -247,6 +251,11 @@ public enum Framework implements UIItem, CodeFormat {
                     "    <scope>test</scope>\n" +
                     "</dependency>";
         }
+
+        @Override
+        public void updateStaticMock(Project project, Set<PsiClass> set, PsiClass annotation, PsiModifierList modifierList) {
+            powerMockUpdateStaticMock(project, set, annotation, modifierList);
+        }
     }, POWER_MOCKITO("PowerMockito") {
         @Override
         public CodeFormat getCodeFormat(boolean staticMock) {
@@ -341,6 +350,11 @@ public enum Framework implements UIItem, CodeFormat {
         public List<PsiAnnotation> psiAnnotations(Project project, Collection<PsiClass> others) {
             return powerMockPsiAnnotations(project, others);
         }
+
+        @Override
+        public void updateStaticMock(Project project, Set<PsiClass> set, PsiClass annotation, PsiModifierList modifierList) {
+            powerMockUpdateStaticMock(project, set, annotation, modifierList);
+        }
     };
 
     @NotNull
@@ -350,11 +364,19 @@ public enum Framework implements UIItem, CodeFormat {
         PsiAnnotation runWith = factory.createAnnotationFromText(String.format("@org.junit.runner.RunWith(PowerMockRunner.class)"), null);
         if (!others.isEmpty()) {
             StringBuilder buffer = new StringBuilder("@org.powermock.core.classloader.annotations.PrepareForTest( ");
-            for (PsiClass other : others) {
-                buffer.append(other.getName()).append(".class, ");
+            StringBuilder multi = new StringBuilder();
+            if (others.size() > 1) {
+                multi.append("value={");
             }
-            buffer.setLength(buffer.length() - 2);
-            buffer.append(")");
+            for (PsiClass other : others) {
+                multi.append(other.getName()).append(".class, ");
+            }
+            multi.setLength(buffer.length() - 2);
+            if (others.size() > 1) {
+                multi.append("}");
+            }
+            multi.append(")");
+            buffer.append(multi);
             PsiAnnotation prepare = factory.createAnnotationFromText(buffer.toString(), null);
             annotations.add(prepare);
         }
@@ -376,6 +398,25 @@ public enum Framework implements UIItem, CodeFormat {
         return list;
     }
 
+    private static void powerMockUpdateStaticMock(Project project, Set<PsiClass> set, @NotNull PsiClass anClass, @Nullable PsiModifierList modifierList) {
+        if (modifierList == null) {
+            return;
+        }
+        if ("org.powermock.core.classloader.annotations.PrepareForTest".equals(anClass.getQualifiedName())) {
+            PsiAnnotation annotation = modifierList.findAnnotation(anClass.getQualifiedName());
+            String content = annotation.getText();
+            content = content.replace(".class", "");
+            content = content.substring(content.indexOf("(") + 1, content.lastIndexOf(")"));
+            String[] classes = content.split(",");
+            for (String aClass : classes) {
+                PsiClass[] psiClass = PsiShortNamesCache.getInstance(project).getClassesByName(aClass, GlobalSearchScope.projectScope(project));
+                set.add(psiClass[0]);
+            }
+
+        }
+
+    }
+
     private String framework;
 
     Framework(String framework) {
@@ -392,6 +433,11 @@ public enum Framework implements UIItem, CodeFormat {
     @Override
     public List<PsiClass> annotationClasses(Project project) {
         return Collections.emptyList();
+    }
+
+    @Override
+    public void updateStaticMock(Project project, Set<PsiClass> set, PsiClass annotation, PsiModifierList modifierList) {
+
     }
 
     @Override
