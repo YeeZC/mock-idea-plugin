@@ -44,10 +44,9 @@ import java.util.Set;
  * @date 2018/11/1
  */
 public class ParameterPanel extends JPanel {
-    protected PsiElementList<CustomPsiClass> parameterList;
-    protected PsiElementList<PsiMethod> returnType;
+    private PsiElementList<CustomPsiClass> parameterList;
+    private PsiElementList<PsiMethod> returnType;
     private JTextArea textPane;
-    private TabbedPaneWrapper tabbedPane;
     private Project project;
     private PsiClass returnTypeClass;
     private PsiMethod method;
@@ -60,7 +59,7 @@ public class ParameterPanel extends JPanel {
         this.project = project;
         this.method = method;
         setLayout(new VerticalFlowLayout());
-        tabbedPane = new TabbedPaneWrapper(disposable);
+        TabbedPaneWrapper tabbedPane = new TabbedPaneWrapper(disposable);
         PsiClass parent = PsiTreeUtil.getParentOfType(method, PsiClass.class, false);
         for (PsiTypeParameter typeParameter : parent.getTypeParameterList().getTypeParameters()) {
             String paramType = typeParameter.getName();

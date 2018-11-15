@@ -36,16 +36,13 @@ import java.util.List;
  */
 public abstract class CodePanel extends JPanel {
     protected PsiElementList<PsiMethod> list;
-    protected PsiElementList<PsiField> fieldList;
+    private PsiElementList<PsiField> fieldList;
     private JTextArea textPane;
     private SelectInfoNode node;
-    private TabbedPaneWrapper tabbedPane;
-    private JScrollPane fieldsPanel;
-    private JScrollPane listScrollPane;
 
     CodePanel(Project project, Disposable disposable) {
         setLayout(new VerticalFlowLayout());
-        tabbedPane = new TabbedPaneWrapper(disposable);
+        TabbedPaneWrapper tabbedPane = new TabbedPaneWrapper(disposable);
         list = new PsiElementList<>();
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         list.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
@@ -55,7 +52,7 @@ public abstract class CodePanel extends JPanel {
             textPane.setText(node.getPreview());
         }));
 
-        listScrollPane = ScrollPaneFactory.createScrollPane(list);
+        JScrollPane listScrollPane = ScrollPaneFactory.createScrollPane(list);
         listScrollPane.setPreferredSize(JBUI.size(500, 100));
         tabbedPane.addTab("Methods", listScrollPane);
         fieldList = new PsiElementList<>();
@@ -66,7 +63,7 @@ public abstract class CodePanel extends JPanel {
 //            node.calculateMethodSelected(methods);
 //            textPane.setText(node.getPreview());
         }));
-        fieldsPanel = ScrollPaneFactory.createScrollPane(fieldList);
+        JScrollPane fieldsPanel = ScrollPaneFactory.createScrollPane(fieldList);
         if (false) {
             tabbedPane.addTab("Fields", fieldsPanel);
         }

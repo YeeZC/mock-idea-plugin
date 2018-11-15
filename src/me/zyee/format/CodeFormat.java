@@ -20,7 +20,6 @@ public interface CodeFormat {
 
     String mockObjectHeadFormat(String className, String beanName);
 
-
     String replay();
 
     String start(String... args);
