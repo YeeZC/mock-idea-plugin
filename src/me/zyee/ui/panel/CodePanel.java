@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.ui.DoubleClickListener;
 import com.intellij.ui.ScrollPaneFactory;
@@ -116,11 +117,11 @@ public abstract class CodePanel extends JPanel {
         if (!MockSetting.getInstance().isStaticMock()) {
             list.setData(DataProcessors.AccessList.of(methods).execute(element -> {
                 PsiModifierList list = element.getModifierList();
-                return !list.hasModifierProperty("static");
+                return !list.hasModifierProperty(PsiModifier.STATIC);
             }));
             fieldList.setData(DataProcessors.AccessList.of(fields).execute(element -> {
                 PsiModifierList list = element.getModifierList();
-                return !list.hasModifierProperty("static");
+                return !list.hasModifierProperty(PsiModifier.STATIC);
             }));
         } else {
             list.setData(methods);

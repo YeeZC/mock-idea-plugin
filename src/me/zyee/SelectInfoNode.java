@@ -2,6 +2,7 @@ package me.zyee;
 
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import me.zyee.config.MockSetting;
 import me.zyee.format.CodeFormat;
@@ -109,7 +110,7 @@ public class SelectInfoNode implements CodeInfoNode {
     @Override
     public boolean isStatic() {
         PsiModifierList list = psiClass.getModifierList();
-        return null != list && (list.hasModifierProperty("static") || list.hasModifierProperty("final"));
+        return null != list && (list.hasModifierProperty(PsiModifier.STATIC) || list.hasModifierProperty(PsiModifier.FINAL));
     }
 
     public Set<String> getContains() {

@@ -27,6 +27,7 @@ import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.presentation.java.SymbolPresentationUtil;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -138,13 +139,13 @@ public class GeneratorDlg extends DialogWrapper implements TreeClassChooser {
                     }
                     if (!MockSetting.getInstance().isStaticMock()) {
                         PsiModifierList list = element.getModifierList();
-                        return null != list && (!list.hasModifierProperty("static") || !list.hasModifierProperty("final"));
+                        return null != list && (!list.hasModifierProperty(PsiModifier.STATIC) || !list.hasModifierProperty(PsiModifier.FINAL));
                     }
                     return true;
                 case MOCKITO:
                     if (!MockSetting.getInstance().isStaticMock()) {
                         PsiModifierList list = element.getModifierList();
-                        return null != list && (!list.hasModifierProperty("static") || !list.hasModifierProperty("final"));
+                        return null != list && (!list.hasModifierProperty(PsiModifier.STATIC) || !list.hasModifierProperty(PsiModifier.FINAL));
                     }
                     return true;
                 default:

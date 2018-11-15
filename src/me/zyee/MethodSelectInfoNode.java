@@ -3,6 +3,7 @@ package me.zyee;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -69,7 +70,7 @@ public class MethodSelectInfoNode implements CodeInfoNode {
 
     @Override
     public boolean isStatic() {
-        return method.getModifierList().hasExplicitModifier("static");
+        return method.getModifierList().hasExplicitModifier(PsiModifier.STATIC);
     }
 
     @NotNull
