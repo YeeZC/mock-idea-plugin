@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import me.zyee.config.Framework;
 import me.zyee.config.MockSetting;
 import me.zyee.format.CodeFormat;
+import me.zyee.value.DefaultValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -114,17 +115,21 @@ public class MethodSelectInfoNode implements CodeInfoNode {
         buffer.setCharAt(buffer.length() - 1, ')');
         buffer.append(")");
         PsiElement type = method.getReturnTypeElement();
-        String mockBeanName = "mockReturn";
         if (null != type) {
-            mockBeanName = "mock" + type.getText();
+            String mockBeanName = "mock" + type.getText();
             int index = mockBeanName.indexOf("<");
             if (index >= 0) {
                 mockBeanName = mockBeanName.substring(0, index);
             }
+            Object value = DefaultValue.value(method.getReturnType());
             mockBeanName = calculateBeanName(mockBeanName, returnTypeBuilder, returnTypeDepNode);
+            if (null == returnTypeDepNode && value != null) {
+                buffer.append(framework.mockMethodEndFormat(value.toString()));
+            } else {
+                buffer.append(framework.mockMethodEndFormat(mockBeanName));
+            }
+            paramBuilder.append(returnTypeBuilder).append(buffer);
         }
-        buffer.append(framework.mockMethodEndFormat(mockBeanName));
-        paramBuilder.append(returnTypeBuilder).append(buffer);
         return paramBuilder.toString();
     }
 
