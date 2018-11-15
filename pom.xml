@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>me.zyee</groupId>
+    <artifactId>easymock-idea-plugin</artifactId>
+    <packaging>pom</packaging>
+    <version>1.3-SNAPSHOT</version>
+    <modules>
+    </modules>
+
+    <properties>
+        <junit.version>4.12</junit.version>
+        <easymock.version>3.4</easymock.version>
+        <powermock.version>1.7.4</powermock.version>
+    </properties>
+
+    <build>
+        <outputDirectory>${user.dir}/target/main</outputDirectory>
+        <testOutputDirectory>${user.dir}/target/test</testOutputDirectory>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+    </dependencies>
+</project>
