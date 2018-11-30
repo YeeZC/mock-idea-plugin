@@ -27,7 +27,7 @@ public class SubclassGotoClassModel<T extends PsiNamedElement> extends MyGotoCla
     }
 
     @Override
-    public void processNames(final Processor<String> nameProcessor, boolean checkBoxState) {
+    public void processNames(final Processor<? super String> nameProcessor, boolean checkBoxState) {
         if (this.myFastMode) {
             this.myFastMode = this.myInheritorsProvider.searchForInheritorsOfBaseClass().forEach(new Processor<PsiClass>() {
                 private final long start = System.currentTimeMillis();

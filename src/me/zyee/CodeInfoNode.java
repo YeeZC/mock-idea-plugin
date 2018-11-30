@@ -12,7 +12,8 @@ public interface CodeInfoNode {
 
     default String getPreview() {
         CodeFormat framework = MockSetting.getInstance().getCodeFormat();
-        StringBuffer buffer = new StringBuffer(framework.start());
+        StringBuffer buffer = new StringBuffer("// Generate by Mock Plugin\n");
+        buffer.append(framework.start());
         buffer.append(getCode());
         buffer.append(framework.replay());
         return buffer.toString();

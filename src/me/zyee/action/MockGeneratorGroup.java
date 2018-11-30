@@ -47,7 +47,8 @@ public class MockGeneratorGroup extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent e) {
         Project project = getEventProject(e);
-
+//        ProjectFileIndex idx = ProjectRootManager.getInstance(project).getFileIndex();
+//        idx.getModuleForFile(e.getData(LangDataKeys.PSI_FILE).getVirtualFile());
         Editor editor = e.getData(CommonDataKeys.EDITOR);
         if (null != editor) {
             Document document = editor.getDocument();

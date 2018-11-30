@@ -54,7 +54,8 @@ public enum Framework implements UIItem, CodeFormat {
 
         @Override
         public String replay() {
-            return "control.replay();\n";
+            return "control.replay();\n" +
+                    "EasyMock.verifyAll();";
         }
 
         @Override
@@ -67,13 +68,7 @@ public enum Framework implements UIItem, CodeFormat {
             List<PsiClass> list = new ArrayList<>();
             PsiClass easymock = PsiType.getTypeByName("org.easymock.EasyMock", project, GlobalSearchScope.allScope(project)).resolve();
             PsiClass control = PsiType.getTypeByName("org.easymock.IMocksControl", project, GlobalSearchScope.allScope(project)).resolve();
-            if (null != easymock) {
-                list.add(easymock);
-            }
-            if (null != control) {
-                list.add(control);
-            }
-            return Collections.unmodifiableList(list);
+            return calculateImportClasses(list, easymock, control);
         }
 
         @Override
@@ -149,8 +144,8 @@ public enum Framework implements UIItem, CodeFormat {
                     "</dependency>\n" +
                     "<dependency>\n" +
                     "    <groupId>org.mockito</groupId>\n" +
-                    "    <artifactId>mockito-all</artifactId>\n" +
-                    "    <version>2.0.2-beta</version>\n" +
+                    "    <artifactId>mockito-core</artifactId>\n" +
+                    "    <version>2.8.9</version>\n" +
                     "    <scope>test</scope>\n" +
                     "</dependency>";
         }
@@ -183,7 +178,10 @@ public enum Framework implements UIItem, CodeFormat {
 
         @Override
         public String replay() {
-            return "PowerMock.replayAll();\n";
+            return "PowerMock.replayAll();\n\n" +
+                    "// do test\n" +
+                    "PowerMock.verifyAll();" +
+                    "\n";
         }
 
         @Override
@@ -205,14 +203,7 @@ public enum Framework implements UIItem, CodeFormat {
                 list.add(runner);
             }
 
-            if (null != powerMock) {
-                list.add(powerMock);
-            }
-
-            if (null != easyMock) {
-                list.add(easyMock);
-            }
-            return Collections.unmodifiableList(list);
+            return calculateImportClasses(list, powerMock, easyMock);
         }
 
         @Override
@@ -304,13 +295,7 @@ public enum Framework implements UIItem, CodeFormat {
             if (null != runner) {
                 list.add(runner);
             }
-            if (null != powerMock) {
-                list.add(powerMock);
-            }
-            if (null != easyMock) {
-                list.add(easyMock);
-            }
-            return Collections.unmodifiableList(list);
+            return calculateImportClasses(list, powerMock, easyMock);
         }
 
         @Override
@@ -323,8 +308,8 @@ public enum Framework implements UIItem, CodeFormat {
                     "</dependency>\n" +
                     "<dependency>\n" +
                     "    <groupId>org.mockito</groupId>\n" +
-                    "    <artifactId>mockito-all</artifactId>\n" +
-                    "    <version>2.0.2-beta</version>\n" +
+                    "    <artifactId>mockito-core</artifactId>\n" +
+                    "    <version>2.8.9</version>\n" +
                     "    <scope>test</scope>\n" +
                     "</dependency>\n" +
                     "<dependency>\n" +
@@ -358,6 +343,17 @@ public enum Framework implements UIItem, CodeFormat {
     };
 
     @NotNull
+    private static List<PsiClass> calculateImportClasses(List<PsiClass> list, PsiClass easymock, PsiClass control) {
+        if (null != easymock) {
+            list.add(easymock);
+        }
+        if (null != control) {
+            list.add(control);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    @NotNull
     private static List<PsiAnnotation> powerMockPsiAnnotations(Project project, Collection<PsiClass> others) {
         List<PsiAnnotation> annotations = new ArrayList<>();
         PsiElementFactory factory = JavaPsiFacade.getElementFactory(project);
@@ -371,7 +367,8 @@ public enum Framework implements UIItem, CodeFormat {
             for (PsiClass other : others) {
                 multi.append(other.getName()).append(".class, ");
             }
-            multi.setLength(buffer.length() - 2);
+
+            multi.setLength(multi.length() - 2);
             if (others.size() > 1) {
                 multi.append("}");
             }
@@ -404,13 +401,15 @@ public enum Framework implements UIItem, CodeFormat {
         }
         if ("org.powermock.core.classloader.annotations.PrepareForTest".equals(anClass.getQualifiedName())) {
             PsiAnnotation annotation = modifierList.findAnnotation(anClass.getQualifiedName());
-            String content = annotation.getText();
-            content = content.replace(".class", "");
-            content = content.substring(content.indexOf("(") + 1, content.lastIndexOf(")"));
-            String[] classes = content.split(",");
-            for (String aClass : classes) {
-                PsiClass[] psiClass = PsiShortNamesCache.getInstance(project).getClassesByName(aClass, GlobalSearchScope.projectScope(project));
-                set.add(psiClass[0]);
+            if (null != annotation) {
+                String content = annotation.getText();
+                content = content.replace(".class", "");
+                content = content.substring(content.indexOf("(") + 1, content.lastIndexOf(")"));
+                String[] classes = content.split(",");
+                for (String aClass : classes) {
+                    PsiClass[] psiClass = PsiShortNamesCache.getInstance(project).getClassesByName(aClass, GlobalSearchScope.projectScope(project));
+                    set.add(psiClass[0]);
+                }
             }
 
         }

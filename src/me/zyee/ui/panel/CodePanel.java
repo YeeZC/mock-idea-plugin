@@ -44,7 +44,7 @@ public abstract class CodePanel extends JPanel {
         setLayout(new VerticalFlowLayout());
         TabbedPaneWrapper tabbedPane = new TabbedPaneWrapper(disposable);
         list = new PsiElementList<>();
-        list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        list.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         list.addListSelectionListener(e -> SwingUtilities.invokeLater(() -> {
             List<PsiMethod> methods = list.getSelectedValuesList();
             node.getContains().clear();
