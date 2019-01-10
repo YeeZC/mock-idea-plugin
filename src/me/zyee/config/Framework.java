@@ -404,11 +404,18 @@ public enum Framework implements UIItem, CodeFormat {
             if (null != annotation) {
                 String content = annotation.getText();
                 content = content.replace(".class", "");
+                content = content.replace("{", "");
+                content = content.replace("}", "");
+                content = content.replace("value", "");
+                content = content.replace("=", "");
+
                 content = content.substring(content.indexOf("(") + 1, content.lastIndexOf(")"));
                 String[] classes = content.split(",");
                 for (String aClass : classes) {
-                    PsiClass[] psiClass = PsiShortNamesCache.getInstance(project).getClassesByName(aClass, GlobalSearchScope.projectScope(project));
-                    set.add(psiClass[0]);
+                    PsiClass[] psiClass = PsiShortNamesCache.getInstance(project).getClassesByName(aClass.trim(), GlobalSearchScope.projectScope(project));
+                    if (psiClass.length > 0) {
+                        set.add(psiClass[0]);
+                    }
                 }
             }
 
